@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>HouseMatch Vibrant Pro Pricing Plan</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#136dec",
+                        "electric-blue": "#00f2fe",
+                        "cyan-vibrant": "#4facfe",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101822",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        @layer base {
+            body {
+                font-family: 'Space Grotesk', sans-serif;
+                cursor: none;
+            }
+        }
+        .cloud-cursor-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            background: radial-gradient(circle 400px at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(19, 109, 236, 0.05), transparent 80%);
+        }
+        .pricing-card-hover:hover {
+            transform: translateY(-8px);
+            transition: all 0.3s ease;
+        }
+        .pro-glow-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(224, 247, 255, 0.95) 100%);
+            position: relative;
+            z-index: 1;
+        }
+        .pro-glow-card::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            z-index: -1;
+            border-radius: 1.1rem;
+            opacity: 0.6;
+        }
+        .pro-glow-card:hover::after {
+            opacity: 1;
+            box-shadow: 0 0 30px rgba(0, 242, 254, 0.4);
+        }
+        .custom-cursor {
+            width: 24px;
+            height: 24px;
+            background: rgba(19, 109, 236, 0.3);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(19, 109, 236, 0.5);
+            transition: transform 0.1s ease-out;
+        }
+        .popular-badge-glow {
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-[#111418] selection:bg-primary/30 min-h-screen" onmousemove="document.body.style.setProperty('--mouse-x', event.clientX + 'px'); document.body.style.setProperty('--mouse-y', event.clientY + 'px'); document.getElementById('cursor').style.left = event.clientX + 'px'; document.getElementById('cursor').style.top = event.clientY + 'px';">
+<div class="custom-cursor hidden lg:block" id="cursor"></div>
+<div class="cloud-cursor-bg"></div>
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+<div class="layout-container flex h-full grow flex-col">
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-primary/10 px-10 py-5 bg-white/80 backdrop-blur-md sticky top-0 z-50">
+<div class="flex items-center gap-4 text-[#111418]">
+<div class="size-8 text-primary">
+<svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M13.8261 30.5736C16.7203 29.8826 20.2244 29.4783 24 29.4783C27.7756 29.4783 31.2797 29.8826 34.1739 30.5736C36.9144 31.2278 39.9967 32.7669 41.3563 33.8352L24.8486 7.36089C24.4571 6.73303 23.5429 6.73303 23.1514 7.36089L6.64374 33.8352C8.00331 32.7669 11.0856 31.2278 13.8261 30.5736Z" fill="currentColor"></path>
+<path clip-rule="evenodd" d="M39.998 35.764C39.9944 35.7463 39.9875 35.7155 39.9748 35.6706C39.9436 35.5601 39.8949 35.4259 39.8346 35.2825C39.8168 35.2403 39.7989 35.1993 39.7813 35.1602C38.5103 34.2887 35.9788 33.0607 33.7095 32.5189C30.9875 31.8691 27.6413 31.4783 24 31.4783C20.3587 31.4783 17.0125 31.8691 14.2905 32.5189C12.0012 33.0654 9.44505 34.3104 8.18538 35.1832C8.17384 35.2075 8.16216 35.233 8.15052 35.2592C8.09919 35.3751 8.05721 35.4886 8.02977 35.589C8.00356 35.6848 8.00039 35.7333 8.00004 35.7388C8.00004 35.739 8 35.7393 8.00004 35.7388C8.00004 35.7641 8.0104 36.0767 8.68485 36.6314C9.34546 37.1746 10.4222 37.7531 11.9291 38.2772C14.9242 39.319 19.1919 40 24 40C28.8081 40 33.0758 39.319 36.0709 38.2772C37.5778 37.7531 38.6545 37.1746 39.3151 36.6314C39.9006 36.1499 39.9857 35.8511 39.998 35.764ZM4.95178 32.7688L21.4543 6.30267C22.6288 4.4191 25.3712 4.41909 26.5457 6.30267L43.0534 32.777C43.0709 32.8052 43.0878 32.8338 43.104 32.8629L41.3563 33.8352C43.104 32.8629 43.1038 32.8626 43.104 32.8629L43.1051 32.865L43.1065 32.8675L43.1101 32.8739L43.1199 32.8918C43.1276 32.906 43.1377 32.9246 43.1497 32.9473C43.1738 32.9925 43.2062 33.0545 43.244 33.1299C43.319 33.2792 43.4196 33.489 43.5217 33.7317C43.6901 34.1321 44 34.9311 44 35.7391C44 37.4427 43.003 38.7775 41.8558 39.7209C40.6947 40.6757 39.1354 41.4464 37.385 42.0552C33.8654 43.2794 29.133 44 24 44C18.867 44 14.1346 43.2794 10.615 42.0552C8.86463 41.4464 7.30529 40.6757 6.14419 39.7209C4.99695 38.7775 3.99999 37.4427 3.99999 35.7391C3.99999 34.8725 4.29264 34.0922 4.49321 33.6393C4.60375 33.3898 4.71348 33.1804 4.79687 33.0311C4.83898 32.9556 4.87547 32.8935 4.9035 32.8471C4.91754 32.8238 4.92954 32.8043 4.93916 32.7889L4.94662 32.777L4.95178 32.7688ZM35.9868 29.004L24 9.77997L12.0131 29.004C12.4661 28.8609 12.9179 28.7342 13.3617 28.6282C16.4281 27.8961 20.0901 27.4783 24 27.4783C27.9099 27.4783 31.5719 27.8961 34.6383 28.6282C35.082 28.7342 35.5339 28.8609 35.9868 29.004Z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+<h2 class="text-[#111418] text-2xl font-black leading-tight tracking-[-0.015em] font-display">HouseMatch</h2>
+</div>
+<div class="flex flex-1 justify-end gap-8 items-center">
+<nav class="hidden md:flex items-center gap-9">
+<a class="text-[#111418] text-sm font-semibold leading-normal hover:text-primary transition-colors" href="#">Solutions</a>
+<a class="text-[#111418] text-sm font-semibold leading-normal hover:text-primary transition-colors" href="#">Features</a>
+<a class="text-[#111418] text-sm font-semibold leading-normal hover:text-primary transition-colors" href="#">Pricing</a>
+<a class="text-[#111418] text-sm font-semibold leading-normal hover:text-primary transition-colors" href="#">About</a>
+</nav>
+<div class="flex gap-4">
+<button class="flex min-w-[100px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-11 px-6 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
+                            Sign Up
+                        </button>
+<button class="flex min-w-[100px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-11 px-6 bg-primary/10 text-primary text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/20 transition-all">
+                            Login
+                        </button>
+</div>
+</div>
+</header>
+<main class="flex-1 flex flex-col items-center justify-center py-20 px-6">
+<div class="max-w-[800px] text-center mb-16 space-y-4">
+<h1 class="text-[#111418] text-5xl md:text-6xl font-black leading-tight tracking-[-0.04em] font-display">
+                        Find your perfect home with the <span class="text-primary italic">right plan.</span>
+</h1>
+<p class="text-[#617289] text-xl font-medium leading-relaxed max-w-2xl mx-auto">
+                        Whether you're starting your search or looking for professional real estate tools, we have a plan for your journey.
+                    </p>
+</div>
+<div class="flex items-center gap-4 mb-16 bg-white p-2 rounded-xl shadow-sm border border-primary/5">
+<span class="text-sm font-bold text-[#617289]">Monthly</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-14 h-7 bg-primary/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-primary after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary/30"></div>
+</label>
+<div class="flex items-center gap-2">
+<span class="text-sm font-bold text-[#111418]">Yearly</span>
+<span class="bg-green-100 text-green-600 text-[10px] font-black uppercase px-2 py-0.5 rounded-full">Save 20%</span>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-[1000px] w-full relative z-10">
+<div class="pricing-card-hover flex flex-col gap-8 rounded-2xl border border-solid border-primary/10 bg-white/60 backdrop-blur-sm p-10 shadow-xl shadow-primary/5">
+<div class="flex flex-col gap-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary bg-primary/10 p-2 rounded-lg" style="font-variation-settings: 'FILL' 0, 'wght' 400;">home</span>
+<h3 class="text-[#111418] text-xl font-bold leading-tight font-display">Plan inicial</h3>
+</div>
+<p class="text-[#617289] text-sm font-medium">Perfect for i</p>
+<div class="flex items-baseline gap-1 mt-4">
+<span class="text-[#111418] text-6xl font-black leading-tight tracking-[-0.04em] font-display">$7</span>
+<span class="text-[#617289] text-lg font-bold">/month</span>
+</div>
+</div>
+<div class="flex flex-col gap-4 flex-1">
+<div class="flex items-center gap-3 text-sm font-semibold text-[#111418]">
+<span class="material-symbols-outlined text-primary text-xl">check_circle</span>
+                                Buscador en tiempo real.
+                            </div>
+<div class="flex items-center gap-3 text-sm font-semibold text-[#111418]">
+<span class="material-symbols-outlined text-primary text-xl">check_circle</span>
+                                Accede a más de 10.000 propiedades de todo Bolivia con un clic.
+                            </div>
+<div class="flex items-center gap-3 text-sm font-semibold text-[#111418]">
+<span class="material-symbols-outlined text-primary text-xl">check_circle</span>
+                                Filtra tus opciones favoritas en segundos.
+                            </div>
+<div class="flex items-center gap-3 text-sm font-semibold text-[#111418]">
+<span class="material-symbols-outlined text-primary text-xl">check_circle</span>
+                                Comunicación directa con el captador en un clic.
+                            </div>
+<div class="flex items-center gap-3 text-sm font-semibold text-[#111418]">
+<span class="material-symbols-outlined text-primary text-xl">check_circle</span>
+                                Hasta 10 etiquetas para guardar tus inmuebles favoritos.
+                            </div>
+<div class="flex items-center gap-3 text-sm font-semibold text-[#111418]">
+<span class="material-symbols-outlined text-primary text-xl">check_circle</span>
+                                Servicio al cliente 24/7
+                            </div>
+
+</div>
+<button class="w-full flex cursor-pointer items-center justify-center rounded-xl h-14 bg-background-light text-[#111418] text-base font-black leading-normal tracking-[0.02em] hover:bg-primary hover:text-white transition-all border border-primary/10">
+                            Select Starter
+                        </button>
+</div>
+<div class="pricing-card-hover pro-glow-card flex flex-col gap-8 rounded-2xl p-10 shadow-2xl transform scale-105 relative overflow-hidden">
+<div class="absolute top-0 right-0 popular-badge-glow text-white text-[10px] font-black uppercase px-5 py-2 rounded-bl-2xl">
+                            Most Popular
+                        </div>
+<div class="flex flex-col gap-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-white bg-gradient-to-br from-cyan-vibrant to-electric-blue p-2.5 rounded-xl shadow-lg shadow-cyan-500/30" style="font-variation-settings: 'FILL' 1, 'wght' 600;">domain</span>
+<h3 class="text-[#0a3069] text-xl font-bold leading-tight font-display">Professional Tier</h3>
+</div>
+<p class="text-[#475569] text-sm font-medium">Advanced tools for serious investors and buyers.</p>
+<div class="flex items-baseline gap-1 mt-4">
+<span class="bg-gradient-to-r from-[#136dec] to-[#00f2fe] bg-clip-text text-transparent text-6xl font-black leading-tight tracking-[-0.04em] font-display">$21</span>
+<span class="text-[#475569] text-lg font-bold">/Mes</span>
+</div>
+</div>
+<div class="flex flex-col gap-4 flex-1">
+<div class="flex items-center gap-3 text-sm font-bold text-[#136dec]">
+<span class="material-symbols-outlined text-[#00f2fe] text-xl drop-shadow-sm" style="font-variation-settings: 'FILL' 1;">stars</span>
+                                Todo lo que incluye el plan básico.
+                            </div>
+<div class="flex items-center gap-3 text-sm font-semibold text-[#0a3069]">
+<span class="material-symbols-outlined text-cyan-vibrant text-xl">3d_rotation</span>
+                                Alertas personalizadas de tus requerimientos específicos antes que los demás usuarios
+                            </div>
+<div class="flex items-center gap-3 text-sm font-semibold text-[#0a3069]">
+<span class="material-symbols-outlined text-cyan-vibrant text-xl">support_agent</span>
+                                Buscador con IA (Encuentra tu requerimiento con Inteligencia Artificial en segundos)
+                            </div>
+<div class="flex items-center gap-3 text-sm font-semibold text-[#0a3069]">
+<span class="material-symbols-outlined text-cyan-vibrant text-xl">psychology</span>
+                                Acceso al Rango del valor Referencial del M2 por zona en menos de 10 segundos
+                            </div>
+<div class="flex items-center gap-3 text-sm font-semibold text-[#0a3069]">
+<span class="material-symbols-outlined text-cyan-vibrant text-xl">all_inclusive</span>
+                                Formulación automatizada de tu AMC (análisis de mercado comparativo) en 3 simples pasos
+                            </div>
+<div class="flex items-center gap-3 text-sm font-semibold text-[#111418]">
+<span class="material-symbols-outlined text-primary text-xl">check_circle</span>
+                                Documento pdf listo de tu AMC para descargar y enviar a tu cliente
+                            </div>
+<div class="flex items-center gap-3 text-sm font-semibold text-[#111418]">
+<span class="material-symbols-outlined text-primary text-xl">check_circle</span>
+                                Etiquetas infinitas para tus inmuebles favoritos
+                            </div>
+<div class="flex items-center gap-3 text-sm font-semibold text-[#111418]">
+<span class="material-symbols-outlined text-primary text-xl">check_circle</span>
+                                Ficha técnica de los inmuebles en pdf para enviar a tu cliente
+                            </div>
+<div class="flex items-center gap-3 text-sm font-semibold text-[#111418]">
+<span class="material-symbols-outlined text-primary text-xl">check_circle</span>
+                                Comunidad exclusiva de los usuarios pro
+                            </div>
+</div>
+<button class="w-full flex cursor-pointer items-center justify-center rounded-xl h-14 bg-gradient-to-r from-cyan-vibrant to-electric-blue text-white text-base font-black leading-normal tracking-[0.02em] hover:brightness-110 transition-all shadow-xl shadow-cyan-400/30">
+                            Select Pro Plan
+                        </button>
+</div>
+</div>
+<div class="mt-24 flex flex-col items-center gap-8 w-full max-w-[1000px]">
+<div class="flex flex-wrap justify-center gap-12 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
+<div class="flex items-center gap-2 font-display font-bold text-xl">
+<span class="material-symbols-outlined">security</span> SECURE PAY
+                        </div>
+<div class="flex items-center gap-2 font-display font-bold text-xl">
+<span class="material-symbols-outlined">verified_user</span> TRUSTED
+                        </div>
+<div class="flex items-center gap-2 font-display font-bold text-xl">
+<span class="material-symbols-outlined">history</span> 24/7 SUPPORT
+                        </div>
+</div>
+<div class="text-center space-y-2">
+<p class="text-[#617289] text-sm font-medium">No hidden fees. Cancel your subscription anytime.</p>
+<a class="text-primary text-sm font-bold flex items-center justify-center gap-1 hover:underline" href="#">
+                            View Frequently Asked Questions <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+</div>
+</div>
+</main>
+<footer class="bg-white border-t border-primary/5 py-12 px-10">
+<div class="max-w-[1200px] mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+<div class="flex items-center gap-2 text-[#111418]">
+<div class="size-6 text-primary">
+<svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M13.8261 30.5736C16.7203 29.8826 20.2244 29.4783 24 29.4783C27.7756 29.4783 31.2797 29.8826 34.1739 30.5736C36.9144 31.2278 39.9967 32.7669 41.3563 33.8352L24.8486 7.36089C24.4571 6.73303 23.5429 6.73303 23.1514 7.36089L6.64374 33.8352C8.00331 32.7669 11.0856 31.2278 13.8261 30.5736Z" fill="currentColor"></path>
+</svg>
+</div>
+<span class="font-black text-lg tracking-tight">HouseMatch</span>
+</div>
+<div class="flex gap-8 text-[#617289] text-xs font-bold uppercase tracking-widest">
+<a class="hover:text-primary transition-colors" href="#">Terms of Service</a>
+<a class="hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="hover:text-primary transition-colors" href="#">Contact Us</a>
+</div>
+<p class="text-[#617289] text-xs font-medium">© 2024 HouseMatch Inc. All rights reserved.</p>
+</div>
+</footer>
+</div>
+</div>
+<div class="fixed bottom-0 left-0 w-full h-1/2 opacity-20 pointer-events-none -z-10">
+<div class="w-full h-full bg-gradient-to-t from-primary/10 to-transparent"></div>
+</div>
+
+</body></html>

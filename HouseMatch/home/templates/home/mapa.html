@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mapa de Propiedades</title>
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin=""
+    >
+    <style>
+        :root {
+            --bg: #f6f8fb;
+            --panel: #ffffff;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --accent: #0f766e;
+            --border: #d1d5db;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle at top, #dbeafe, var(--bg));
+            color: var(--text);
+            min-height: 100vh;
+        }
+        .layout {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 16px;
+            padding: 16px;
+            min-height: 100vh;
+        }
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+        }
+        .panel h1 {
+            font-size: 1.25rem;
+            margin: 0 0 10px;
+        }
+        .panel p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.4;
+        }
+        .stats {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 10px;
+            background: #ecfeff;
+            border: 1px solid #99f6e4;
+            color: #134e4a;
+            font-weight: 600;
+        }
+        #map {
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            min-height: calc(100vh - 32px);
+            width: 100%;
+        }
+        .leaflet-popup-content {
+            margin: 10px 12px;
+            line-height: 1.35;
+        }
+        .popup-title {
+            margin: 0 0 8px;
+            font-size: 1rem;
+        }
+        .popup-meta {
+            margin: 4px 0;
+            color: #374151;
+            font-size: 0.9rem;
+        }
+        .popup-link {
+            display: inline-block;
+            margin-top: 8px;
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        @media (max-width: 900px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+            #map {
+                min-height: 70vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="layout">
+        <aside class="panel">
+            <h1>Mapa de Propiedades</h1>
+            <p>Visualiza inmuebles activos con coordenadas geográficas en tiempo real.</p>
+            <div class="stats" id="stats">Cargando inmuebles...</div>
+        </aside>
+        <section id="map" aria-label="Mapa de propiedades"></section>
+    </main>
+
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""
+    ></script>
+    <script>
+        const map = L.map("map").setView([-17.7833, -63.1821], 12);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(map);
+
+        const statsEl = document.getElementById("stats");
+
+        function popupHtml(properties) {
+            const propertyUrl = properties.url_propiedad || "#";
+            return `
+                <h3 class="popup-title">${properties.titulo}</h3>
+                <p class="popup-meta"><strong>Precio USD:</strong> $${properties.precio_usd}</p>
+                <p class="popup-meta"><strong>Ubicacion:</strong> ${properties.zona}, ${properties.ciudad}</p>
+                <p class="popup-meta"><strong>Tipo:</strong> ${properties.tipo_propiedad} - ${properties.tipo_transaccion}</p>
+                <a class="popup-link" href="${propertyUrl}" target="_blank" rel="noopener noreferrer">Ver detalle</a>
+            `;
+        }
+
+        fetch("/api/inmuebles/mapa/")
+            .then((response) => response.json())
+            .then((geojson) => {
+                const layer = L.geoJSON(geojson, {
+                    pointToLayer: (feature, latlng) => L.circleMarker(latlng, {
+                        radius: 7,
+                        color: "#0f766e",
+                        weight: 1,
+                        fillColor: "#14b8a6",
+                        fillOpacity: 0.85
+                    }),
+                    onEachFeature: (feature, marker) => {
+                        marker.bindPopup(popupHtml(feature.properties));
+                    }
+                }).addTo(map);
+
+                const count = geojson.features ? geojson.features.length : 0;
+                statsEl.textContent = `Inmuebles visibles: ${count}`;
+
+                const bounds = layer.getBounds();
+                if (bounds.isValid()) {
+                    map.fitBounds(bounds, { padding: [24, 24] });
+                }
+            })
+            .catch(() => {
+                statsEl.textContent = "No se pudo cargar el mapa de inmuebles.";
+            });
+    </script>
+</body>
+</html>
