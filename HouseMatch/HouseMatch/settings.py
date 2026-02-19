@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-67**6%d-j&)-*fmrx+waemf^^5m*xd-y49f=@!@)6p*(*9ro&4
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.0.40','localhost', '127.0.0.1','https://housematch.onrender.com']
+ALLOWED_HOSTS = ['192.168.0.40','localhost', '127.0.0.1','housematch.onrender.com']
 
 
 # Application definition
