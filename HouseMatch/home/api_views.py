@@ -25,6 +25,7 @@ class InmuebleMapGeoJSONAPIView(APIView):
         inmuebles = (
             Inmueble.objects.filter(activo=True, latitud__isnull=False, longitud__isnull=False)
             .select_related("tipo_propiedad", "tipo_transaccion", "departamento")
+            .prefetch_related("imagenes")
             .order_by("-id")
         )
 
@@ -45,7 +46,13 @@ class InmuebleMapGeoJSONAPIView(APIView):
                         "ciudad": inmueble.ciudad,
                         "zona": inmueble.zona,
                         "calle": inmueble.calle,
-                        "url_image": inmueble.url_image,
+                        "cant_cuartos": inmueble.cant_cuartos,
+                        "cant_banios": inmueble.cant_banios,
+                        "piscina": inmueble.piscina,
+                        "parqueo": inmueble.parqueo,
+                        "permite_mascotas": inmueble.permite_mascotas,
+                        "imagen_principal": inmueble.imagen_principal,
+                        "imagenes": [img.url for img in inmueble.imagenes.all()],
                         "url_propiedad": inmueble.url_propiedad,
                         "tipo_propiedad": inmueble.tipo_propiedad.nombre,
                         "tipo_transaccion": inmueble.tipo_transaccion.nombre,

@@ -72,14 +72,13 @@ class Inmueble(models.Model):
     precio_usd = models.DecimalField(max_digits=12, decimal_places=2)
     precio_bs = models.DecimalField(max_digits=12, decimal_places=2)
 
-    # Ubicación y Fotos
+    # Ubicación
     calle = models.CharField(max_length=255)
     zona = models.CharField(max_length=100)
     ciudad = models.CharField(max_length=100)
     latitud = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitud = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    url_image = models.URLField(max_length=500, help_text="URL de la foto principal")
-    url_propiedad = models.URLField(max_length=500, help_text="URL de la foto principal",default='', blank=True)
+    url_propiedad = models.URLField(max_length=500, default='', blank=True)
 
     # Boleanos
     parqueo = models.BooleanField(default=False)
@@ -87,5 +86,23 @@ class Inmueble(models.Model):
     permite_mascotas = models.BooleanField(default=False)
     activo = models.BooleanField(default=True)
 
+    @property
+    def imagen_principal(self):
+        img = self.imagenes.first()
+        return img.url if img else None
+
     def __str__(self):
         return f"{self.titulo} - {self.precio_usd}$"
+
+
+class ImagenInmueble(models.Model):
+    inmueble = models.ForeignKey(Inmueble, on_delete=models.CASCADE, related_name='imagenes')
+    url = models.URLField(max_length=500)
+    orden = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ['orden']
+        unique_together = [('inmueble', 'orden')]
+
+    def __str__(self):
+        return f"Imagen {self.orden} - {self.inmueble.titulo}"

@@ -1,164 +1,499 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Mapa de Propiedades</title>
-    <link
-        rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-        crossorigin=""
-    >
-    <style>
-        :root {
-            --bg: #f6f8fb;
-            --panel: #ffffff;
-            --text: #1f2937;
-            --muted: #6b7280;
-            --accent: #0f766e;
-            --border: #d1d5db;
-        }
-        * {
-            box-sizing: border-box;
-        }
-        body {
-            margin: 0;
-            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            background: radial-gradient(circle at top, #dbeafe, var(--bg));
-            color: var(--text);
-            min-height: 100vh;
-        }
-        .layout {
-            display: grid;
-            grid-template-columns: 320px 1fr;
-            gap: 16px;
-            padding: 16px;
-            min-height: 100vh;
-        }
-        .panel {
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px;
-        }
-        .panel h1 {
-            font-size: 1.25rem;
-            margin: 0 0 10px;
-        }
-        .panel p {
-            margin: 0;
-            color: var(--muted);
-            line-height: 1.4;
-        }
-        .stats {
-            margin-top: 16px;
-            padding: 12px;
-            border-radius: 10px;
-            background: #ecfeff;
-            border: 1px solid #99f6e4;
-            color: #134e4a;
-            font-weight: 600;
-        }
-        #map {
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            min-height: calc(100vh - 32px);
-            width: 100%;
-        }
-        .leaflet-popup-content {
-            margin: 10px 12px;
-            line-height: 1.35;
-        }
-        .popup-title {
-            margin: 0 0 8px;
-            font-size: 1rem;
-        }
-        .popup-meta {
-            margin: 4px 0;
-            color: #374151;
-            font-size: 0.9rem;
-        }
-        .popup-link {
-            display: inline-block;
-            margin-top: 8px;
-            color: var(--accent);
-            text-decoration: none;
-            font-weight: 600;
-        }
-        @media (max-width: 900px) {
-            .layout {
-                grid-template-columns: 1fr;
-            }
-            #map {
-                min-height: 70vh;
-            }
-        }
-    </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HouseMatch | Mapa de Propiedades</title>
+
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+<!-- Fonts & Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "primary": "#136dec",
+                },
+                fontFamily: {
+                    "display": ["Inter", "sans-serif"]
+                },
+            },
+        },
+    }
+</script>
+
+<style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; }
+
+    .glass-panel {
+        background: rgba(255,255,255,0.98);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(19,109,236,0.12);
+    }
+    .smoke-particle {
+        position: fixed;
+        pointer-events: none;
+        background: radial-gradient(circle, rgba(19,109,236,0.1) 0%, rgba(255,255,255,0) 70%);
+        border-radius: 50%;
+        transform: translate(-50%,-50%);
+        z-index: 9999;
+        animation: dissipate 1.2s ease-out forwards;
+        mix-blend-mode: multiply;
+    }
+    @keyframes dissipate {
+        0%   { opacity: 0.5; transform: translate(-50%,-50%) scale(0.5); }
+        100% { opacity: 0;   transform: translate(-50%,-50%) scale(3); }
+    }
+
+    /* Leaflet popup overrides */
+    .leaflet-popup-content-wrapper {
+        padding: 0 !important;
+        border-radius: 1.5rem !important;
+        overflow: hidden;
+        border: none !important;
+        box-shadow: 0 30px 60px -12px rgba(0,0,0,0.18),
+                    0 18px 36px -18px rgba(0,0,0,0.2),
+                    0 0 0 1px rgba(19,109,236,0.1) !important;
+    }
+    .leaflet-popup-content { margin: 0 !important; width: 288px !important; }
+    .leaflet-popup-tip { background: white !important; }
+    .leaflet-container { font-family: 'Inter', sans-serif; }
+
+    /* Custom marker */
+    .hm-marker {
+        width: 44px; height: 44px;
+        background: #136dec;
+        border-radius: 50%;
+        border: 3px solid white;
+        display: flex; align-items: center; justify-content: center;
+        color: white;
+        box-shadow: 0 8px 20px rgba(19,109,236,0.35);
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .hm-marker:hover {
+        transform: scale(1.12);
+        box-shadow: 0 12px 28px rgba(19,109,236,0.45);
+    }
+
+    /* Toggle switch */
+    .sw-track { transition: background-color 0.2s ease; }
+    .sw-thumb  { transition: transform 0.2s ease; }
+    .sw-track.on  { background-color: #136dec; }
+    .sw-thumb.on  { transform: translateX(20px); }
+
+    /* Bedroom / bathroom selector */
+    .selector-btn { transition: all 0.15s ease; }
+    .selector-btn.active {
+        background: #136dec; color: white;
+        border-color: #136dec;
+        box-shadow: 0 4px 12px rgba(19,109,236,0.25);
+    }
+
+    /* Multi-select transaction type */
+    .tt-checkbox:checked + label {
+        background-color: #136dec !important;
+        color: white !important;
+        border-color: #136dec !important;
+        box-shadow: 0 4px 12px rgba(19,109,236,0.2);
+    }
+
+    #map { position: absolute; inset: 0; }
+</style>
 </head>
-<body>
-    <main class="layout">
-        <aside class="panel">
-            <h1>Mapa de Propiedades</h1>
-            <p>Visualiza inmuebles activos con coordenadas geográficas en tiempo real.</p>
-            <div class="stats" id="stats">Cargando inmuebles...</div>
-        </aside>
-        <section id="map" aria-label="Mapa de propiedades"></section>
-    </main>
 
-    <script
-        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-        crossorigin=""
-    ></script>
-    <script>
-        const map = L.map("map").setView([-17.7833, -63.1821], 12);
+<body class="bg-white text-slate-800 antialiased h-screen flex flex-col overflow-hidden">
 
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            maxZoom: 19,
-            attribution: "&copy; OpenStreetMap contributors"
-        }).addTo(map);
+<!-- Smoke cursor -->
+<script>
+    document.addEventListener('mousemove', function(e) {
+        if (Math.random() > 0.85) return;
+        const p = document.createElement('div');
+        p.classList.add('smoke-particle');
+        const s = Math.random() * 60 + 30;
+        p.style.cssText = `width:${s}px;height:${s}px;left:${e.clientX}px;top:${e.clientY}px`;
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 1200);
+    });
+</script>
 
-        const statsEl = document.getElementById("stats");
+<!-- ── Navbar ── -->
+<nav class="bg-white border-b border-slate-100 z-50 flex-shrink-0 shadow-sm">
+    <div class="max-w-[1920px] mx-auto px-4 lg:px-6 h-16 flex items-center justify-between">
+        <a href="{% url 'home:index' %}" class="flex items-center gap-2 group">
+            <div class="w-9 h-9 rounded-xl bg-[#136dec] flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+                <span class="material-icons text-xl">home</span>
+            </div>
+            <span class="text-xl font-extrabold tracking-tight text-slate-900">HouseMatch</span>
+        </a>
 
-        function popupHtml(properties) {
-            const propertyUrl = properties.url_propiedad || "#";
-            return `
-                <h3 class="popup-title">${properties.titulo}</h3>
-                <p class="popup-meta"><strong>Precio USD:</strong> $${properties.precio_usd}</p>
-                <p class="popup-meta"><strong>Ubicacion:</strong> ${properties.zona}, ${properties.ciudad}</p>
-                <p class="popup-meta"><strong>Tipo:</strong> ${properties.tipo_propiedad} - ${properties.tipo_transaccion}</p>
-                <a class="popup-link" href="${propertyUrl}" target="_blank" rel="noopener noreferrer">Ver detalle</a>
-            `;
+        <div class="flex items-center gap-4">
+            <!-- Stats badge -->
+            <div id="stats-badge" class="hidden items-center gap-2 px-4 py-2 rounded-full bg-slate-50 border border-slate-200 text-slate-600 font-semibold text-sm">
+                <span class="material-symbols-outlined text-lg text-[#136dec]">apartment</span>
+                <span id="stats-count">0 inmuebles</span>
+            </div>
+
+            {% if user.is_authenticated %}
+            <a href="{% url 'home:logout' %}"
+               class="text-slate-500 hover:text-slate-800 font-medium text-sm transition-colors">
+                Salir
+            </a>
+            <div class="w-10 h-10 rounded-full bg-[#136dec] flex items-center justify-center text-white font-bold text-sm shadow-sm cursor-default select-none">
+                {{ user.email|first|upper }}
+            </div>
+            {% else %}
+            <a href="{% url 'home:login' %}"
+               class="px-4 py-2 bg-[#136dec] text-white rounded-full font-semibold text-sm shadow-lg shadow-blue-500/20 hover:bg-blue-600 transition-colors">
+                Iniciar sesión
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+
+<!-- ── Search & Filters ── -->
+<header class="bg-white border-b border-slate-100 z-40 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex-shrink-0">
+    <div class="max-w-[1920px] mx-auto px-4 lg:px-6 py-4">
+        <div class="flex flex-wrap items-center gap-4">
+
+            <!-- Search -->
+            <div class="flex-1 min-w-[260px] relative">
+                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">search</span>
+                <input id="search-input"
+                       type="text"
+                       placeholder="Buscar zona, ciudad, título..."
+                       class="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-blue-200 focus:border-[#136dec] outline-none transition-all text-sm font-medium"/>
+            </div>
+
+            <!-- Transaction type -->
+            <div class="flex items-center gap-2">
+                <div class="relative">
+                    <input type="checkbox" id="tt-alquiler" class="tt-checkbox hidden" checked/>
+                    <label for="tt-alquiler" class="px-5 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider cursor-pointer transition-all border-2 border-slate-200 text-slate-500 bg-white hover:border-blue-300 block">Alquiler</label>
+                </div>
+                <div class="relative">
+                    <input type="checkbox" id="tt-venta" class="tt-checkbox hidden" checked/>
+                    <label for="tt-venta" class="px-5 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider cursor-pointer transition-all border-2 border-slate-200 text-slate-500 bg-white hover:border-blue-300 block">Venta</label>
+                </div>
+                <div class="relative">
+                    <input type="checkbox" id="tt-anticretico" class="tt-checkbox hidden" checked/>
+                    <label for="tt-anticretico" class="px-5 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider cursor-pointer transition-all border-2 border-slate-200 text-slate-500 bg-white hover:border-blue-300 block">Anticretico</label>
+                </div>
+            </div>
+
+            <!-- Price range -->
+            <div class="flex items-center gap-2 bg-slate-50/50 border border-slate-200 p-1.5 rounded-2xl">
+                <div class="flex items-center px-4 gap-2">
+                    <span class="text-[10px] font-black text-slate-400 tracking-tighter">MIN $</span>
+                    <input id="price-min" type="number" min="0" placeholder="0"
+                           class="w-20 bg-transparent border-none focus:ring-0 outline-none p-0 text-sm font-bold text-slate-700"/>
+                </div>
+                <div class="h-6 w-px bg-slate-200"></div>
+                <div class="flex items-center px-4 gap-2">
+                    <span class="text-[10px] font-black text-slate-400 tracking-tighter">MAX $</span>
+                    <input id="price-max" type="number" min="0" placeholder="Cualquiera"
+                           class="w-24 bg-transparent border-none focus:ring-0 outline-none p-0 text-sm font-bold text-slate-700"/>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex items-center gap-3">
+                <button onclick="toggleAdvanced()"
+                        class="flex items-center gap-2 px-5 py-3.5 bg-white border border-slate-200 rounded-2xl text-slate-700 font-bold text-sm hover:border-[#136dec] hover:text-[#136dec] transition-all">
+                    <span class="material-symbols-outlined text-xl">tune</span>
+                    Filtros
+                </button>
+                <button onclick="applyFilters()"
+                        class="flex items-center gap-2 px-8 py-3.5 bg-[#136dec] text-white font-bold text-sm rounded-2xl shadow-xl shadow-blue-500/20 hover:shadow-blue-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all">
+                    <span class="material-symbols-outlined text-xl">search</span>
+                    Ver resultados
+                </button>
+            </div>
+        </div>
+
+        <!-- Advanced panel -->
+        <div id="advanced-panel" class="hidden mt-6 pt-6 border-t border-slate-100">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+
+                <!-- Bedrooms -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Cuartos</label>
+                    <div class="flex gap-2" id="rooms-group">
+                        <button onclick="selectBtn(this,'rooms',0)" class="selector-btn active w-11 h-11 rounded-xl border-2 border-[#136dec] bg-[#136dec] text-white flex items-center justify-center font-bold text-sm">Todos</button>
+                        <button onclick="selectBtn(this,'rooms',1)" class="selector-btn w-11 h-11 rounded-xl border border-slate-200 flex items-center justify-center font-bold text-slate-600 text-sm hover:border-[#136dec] hover:text-[#136dec]">1+</button>
+                        <button onclick="selectBtn(this,'rooms',2)" class="selector-btn w-11 h-11 rounded-xl border border-slate-200 flex items-center justify-center font-bold text-slate-600 text-sm hover:border-[#136dec] hover:text-[#136dec]">2+</button>
+                        <button onclick="selectBtn(this,'rooms',3)" class="selector-btn w-11 h-11 rounded-xl border border-slate-200 flex items-center justify-center font-bold text-slate-600 text-sm hover:border-[#136dec] hover:text-[#136dec]">3+</button>
+                        <button onclick="selectBtn(this,'rooms',4)" class="selector-btn w-11 h-11 rounded-xl border border-slate-200 flex items-center justify-center font-bold text-slate-600 text-sm hover:border-[#136dec] hover:text-[#136dec]">4+</button>
+                    </div>
+                </div>
+
+                <!-- Bathrooms -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Baños</label>
+                    <div class="flex gap-2" id="baths-group">
+                        <button onclick="selectBtn(this,'baths',0)" class="selector-btn active w-11 h-11 rounded-xl border-2 border-[#136dec] bg-[#136dec] text-white flex items-center justify-center font-bold text-sm">Todos</button>
+                        <button onclick="selectBtn(this,'baths',1)" class="selector-btn w-11 h-11 rounded-xl border border-slate-200 flex items-center justify-center font-bold text-slate-600 text-sm hover:border-[#136dec] hover:text-[#136dec]">1+</button>
+                        <button onclick="selectBtn(this,'baths',2)" class="selector-btn w-11 h-11 rounded-xl border border-slate-200 flex items-center justify-center font-bold text-slate-600 text-sm hover:border-[#136dec] hover:text-[#136dec]">2+</button>
+                        <button onclick="selectBtn(this,'baths',3)" class="selector-btn w-11 h-11 rounded-xl border border-slate-200 flex items-center justify-center font-bold text-slate-600 text-sm hover:border-[#136dec] hover:text-[#136dec]">3+</button>
+                    </div>
+                </div>
+
+                <!-- Amenities toggles -->
+                <div class="col-span-1 lg:col-span-2 flex flex-wrap gap-x-10 gap-y-6 items-center">
+                    <div class="flex items-center gap-4">
+                        <button id="sw-piscina" onclick="toggleAmenity('piscina')"
+                                class="sw-track relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent focus:outline-none bg-slate-200">
+                            <span id="th-piscina" class="sw-thumb inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0"></span>
+                        </button>
+                        <span class="text-sm font-bold text-slate-700">Piscina</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <button id="sw-parqueo" onclick="toggleAmenity('parqueo')"
+                                class="sw-track relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent focus:outline-none bg-slate-200">
+                            <span id="th-parqueo" class="sw-thumb inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0"></span>
+                        </button>
+                        <span class="text-sm font-bold text-slate-700">Parqueo</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <button id="sw-mascotas" onclick="toggleAmenity('mascotas')"
+                                class="sw-track relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent focus:outline-none bg-slate-200">
+                            <span id="th-mascotas" class="sw-thumb inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0"></span>
+                        </button>
+                        <span class="text-sm font-bold text-slate-700">Mascotas</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- ── Map ── -->
+<main class="flex-1 relative overflow-hidden">
+    <div id="map"></div>
+
+    <!-- Zoom controls -->
+    <div class="absolute bottom-10 left-10 flex flex-col gap-3 z-[400]">
+        <button onclick="mapInst.zoomIn()"
+                class="w-12 h-12 bg-white rounded-2xl shadow-xl border border-slate-100 flex items-center justify-center text-slate-600 hover:text-[#136dec] hover:scale-105 active:scale-95 transition-all">
+            <span class="material-symbols-outlined">add</span>
+        </button>
+        <button onclick="mapInst.zoomOut()"
+                class="w-12 h-12 bg-white rounded-2xl shadow-xl border border-slate-100 flex items-center justify-center text-slate-600 hover:text-[#136dec] hover:scale-105 active:scale-95 transition-all">
+            <span class="material-symbols-outlined">remove</span>
+        </button>
+    </div>
+
+    <!-- Locate / recenter button -->
+    <div class="absolute bottom-10 right-10 z-[400]">
+        <button onclick="centerBolivia()"
+                class="flex items-center gap-2 px-8 py-4 bg-white rounded-full shadow-2xl border border-slate-100 text-slate-700 font-bold hover:bg-slate-50 hover:scale-105 active:scale-95 transition-all group">
+            <span class="material-symbols-outlined text-[#136dec] group-hover:rotate-12 transition-transform">my_location</span>
+            Centrar en Bolivia
+        </button>
+    </div>
+</main>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+// ── Map init ──────────────────────────────────────────────────
+const SANTA_CRUZ = [-17.7833, -63.1821];
+const mapInst = L.map('map', { zoomControl: false }).setView(SANTA_CRUZ, 12);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>'
+}).addTo(mapInst);
+
+// ── State ─────────────────────────────────────────────────────
+let allFeatures  = [];
+let activeLayer  = null;
+let minRooms     = 0;
+let minBaths     = 0;
+const amenState  = { piscina: false, parqueo: false, mascotas: false };
+
+// ── Marker icon ───────────────────────────────────────────────
+const ICON_MAP = { 'Casa': 'house', 'Dpto': 'apartment', 'Quinta': 'nature_people' };
+
+function makeIcon(tipo) {
+    const name = ICON_MAP[tipo] || 'home';
+    return L.divIcon({
+        html: `<div class="hm-marker"><span class="material-icons" style="font-size:20px">${name}</span></div>`,
+        className: '',
+        iconSize:   [44, 44],
+        iconAnchor: [22, 22],
+        popupAnchor:[0, -26],
+    });
+}
+
+// ── Popup HTML ────────────────────────────────────────────────
+function popupHtml(p) {
+    const imgHtml = p.imagen_principal
+        ? `<img src="${p.imagen_principal}" alt="${p.titulo}"
+               style="width:100%;height:100%;object-fit:cover;display:block"/>`
+        : `<div style="width:100%;height:100%;background:#f1f5f9;display:flex;align-items:center;justify-content:center">
+               <span class="material-icons" style="font-size:48px;color:#cbd5e1">home</span>
+           </div>`;
+
+    const badge = p.url_propiedad
+        ? `<a href="${p.url_propiedad}" target="_blank" rel="noopener"
+              style="position:absolute;top:12px;right:12px;background:#136dec;color:white;font-size:10px;font-weight:900;padding:6px 12px;border-radius:12px;text-decoration:none;box-shadow:0 4px 12px rgba(19,109,236,0.3)">
+              VER DETALLE
+           </a>`
+        : '';
+
+    const amenIcons = [
+        p.piscina         ? '🏊' : '',
+        p.parqueo         ? '🚗' : '',
+        p.permite_mascotas? '🐾' : '',
+    ].filter(Boolean).join(' ');
+
+    return `
+    <div style="width:288px;font-family:'Inter',sans-serif;">
+        <div style="position:relative;height:176px;overflow:hidden;">
+            ${imgHtml}
+            <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.4) 0%,transparent 60%)"></div>
+            ${badge}
+        </div>
+        <div style="padding:20px;">
+            <p style="margin:0 0 4px;font-size:1.05rem;font-weight:800;color:#136dec;line-height:1.3">${p.titulo}</p>
+            <p style="margin:0 0 14px;font-size:0.75rem;color:#64748b;display:flex;align-items:center;gap:4px">
+                <span class="material-symbols-outlined" style="font-size:14px">location_on</span>
+                ${p.zona}, ${p.ciudad}
+            </p>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid #f1f5f9">
+                <span style="font-size:1.2rem;font-weight:900;color:#1e293b;letter-spacing:-0.02em">
+                    $${Number(p.precio_usd).toLocaleString()}
+                </span>
+                <div style="display:flex;gap:10px;background:#f8fafc;padding:5px 12px;border-radius:999px;border:1px solid #f1f5f9;font-size:0.75rem;font-weight:700;color:#475569;align-items:center">
+                    <span style="display:flex;align-items:center;gap:3px">
+                        <span class="material-symbols-outlined" style="font-size:15px;color:#136dec">bed</span>${p.cant_cuartos ?? '—'}
+                    </span>
+                    <span style="display:flex;align-items:center;gap:3px">
+                        <span class="material-symbols-outlined" style="font-size:15px;color:#136dec">bathtub</span>${p.cant_banios ?? '—'}
+                    </span>
+                    ${amenIcons ? `<span style="letter-spacing:2px">${amenIcons}</span>` : ''}
+                </div>
+            </div>
+        </div>
+    </div>`;
+}
+
+// ── Render ────────────────────────────────────────────────────
+function render(features) {
+    if (activeLayer) mapInst.removeLayer(activeLayer);
+
+    activeLayer = L.geoJSON(
+        { type: 'FeatureCollection', features },
+        {
+            pointToLayer: (f, ll) => L.marker(ll, { icon: makeIcon(f.properties.tipo_propiedad) }),
+            onEachFeature: (f, m) => m.bindPopup(popupHtml(f.properties), { maxWidth: 310 }),
         }
+    ).addTo(mapInst);
 
-        fetch("/api/inmuebles/mapa/")
-            .then((response) => response.json())
-            .then((geojson) => {
-                const layer = L.geoJSON(geojson, {
-                    pointToLayer: (feature, latlng) => L.circleMarker(latlng, {
-                        radius: 7,
-                        color: "#0f766e",
-                        weight: 1,
-                        fillColor: "#14b8a6",
-                        fillOpacity: 0.85
-                    }),
-                    onEachFeature: (feature, marker) => {
-                        marker.bindPopup(popupHtml(feature.properties));
-                    }
-                }).addTo(map);
+    const n = features.length;
+    document.getElementById('stats-count').textContent = `${n} inmueble${n !== 1 ? 's' : ''}`;
+    const badge = document.getElementById('stats-badge');
+    badge.style.display = 'flex';
 
-                const count = geojson.features ? geojson.features.length : 0;
-                statsEl.textContent = `Inmuebles visibles: ${count}`;
+    if (n > 0) {
+        const b = activeLayer.getBounds();
+        if (b.isValid()) mapInst.fitBounds(b, { padding: [60, 60] });
+    }
+}
 
-                const bounds = layer.getBounds();
-                if (bounds.isValid()) {
-                    map.fitBounds(bounds, { padding: [24, 24] });
-                }
-            })
-            .catch(() => {
-                statsEl.textContent = "No se pudo cargar el mapa de inmuebles.";
-            });
-    </script>
+// ── Filters ───────────────────────────────────────────────────
+function applyFilters() {
+    const q        = document.getElementById('search-input').value.toLowerCase().trim();
+    const minP     = parseFloat(document.getElementById('price-min').value) || 0;
+    const maxP     = parseFloat(document.getElementById('price-max').value) || Infinity;
+    const wAlq     = document.getElementById('tt-alquiler').checked;
+    const wVen     = document.getElementById('tt-venta').checked;
+    const wAnti    = document.getElementById('tt-anticretico').checked;
+
+    const filtered = allFeatures.filter(f => {
+        const p    = f.properties;
+        const text = `${p.titulo} ${p.zona} ${p.ciudad} ${p.calle}`.toLowerCase();
+        if (q && !text.includes(q)) return false;
+
+        const price = parseFloat(p.precio_usd);
+        if (price < minP || price > maxP) return false;
+
+        const tt = (p.tipo_transaccion || '').toLowerCase();
+        if (tt.includes('alquiler')    && !wAlq)  return false;
+        if (tt.includes('venta')       && !wVen)  return false;
+        if (tt.includes('anticretico') && !wAnti) return false;
+
+        if (minRooms > 0 && (p.cant_cuartos ?? 0) < minRooms) return false;
+        if (minBaths > 0 && (p.cant_banios  ?? 0) < minBaths) return false;
+
+        if (amenState.piscina   && !p.piscina)          return false;
+        if (amenState.parqueo   && !p.parqueo)           return false;
+        if (amenState.mascotas  && !p.permite_mascotas)  return false;
+
+        return true;
+    });
+
+    render(filtered);
+}
+
+// ── Data fetch ────────────────────────────────────────────────
+fetch('/api/inmuebles/mapa/')
+    .then(r => r.json())
+    .then(geo => {
+        allFeatures = geo.features || [];
+        render(allFeatures);
+    })
+    .catch(() => {
+        document.getElementById('stats-count').textContent = 'Error al cargar';
+        document.getElementById('stats-badge').style.display = 'flex';
+    });
+
+// ── UI helpers ────────────────────────────────────────────────
+function toggleAdvanced() {
+    document.getElementById('advanced-panel').classList.toggle('hidden');
+}
+
+function selectBtn(btn, group, val) {
+    if (group === 'rooms') minRooms = val;
+    else                   minBaths = val;
+
+    const id = group === 'rooms' ? 'rooms-group' : 'baths-group';
+    document.querySelectorAll(`#${id} .selector-btn`).forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+}
+
+function toggleAmenity(name) {
+    amenState[name] = !amenState[name];
+    const track = document.getElementById(`sw-${name}`);
+    const thumb = document.getElementById(`th-${name}`);
+    if (amenState[name]) {
+        track.classList.add('on');
+        thumb.classList.add('on');
+    } else {
+        track.classList.remove('on');
+        thumb.classList.remove('on');
+    }
+}
+
+function centerBolivia() {
+    mapInst.setView(SANTA_CRUZ, 12);
+}
+</script>
 </body>
 </html>

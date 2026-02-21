@@ -4,6 +4,7 @@ from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from .models import (
     Departamento,
     Empresa,
+    ImagenInmueble,
     Inmueble,
     PerfilAsesor,
     TipoPropiedad,
@@ -47,8 +48,16 @@ class PerfilAsesorAdmin(admin.ModelAdmin):
     search_fields = ("user__email", "user__username", "id_asesor_externo", "empresa__nombre")
 
 
+class ImagenInmuebleInline(admin.TabularInline):
+    model = ImagenInmueble
+    extra = 1
+    fields = ("orden", "url")
+    ordering = ("orden",)
+
+
 @admin.register(Inmueble)
 class InmuebleAdmin(admin.ModelAdmin):
+    inlines = [ImagenInmuebleInline]
     list_display = (
         "id",
         "titulo",

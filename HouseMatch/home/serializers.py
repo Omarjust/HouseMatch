@@ -1,9 +1,17 @@
 from rest_framework import serializers
 
-from .models import Inmueble
+from .models import ImagenInmueble, Inmueble
 
 
 class InmuebleCreateSerializer(serializers.ModelSerializer):
+    imagenes = serializers.ListField(
+        child=serializers.URLField(max_length=500),
+        write_only=True,
+        required=False,
+        default=list,
+        help_text="Lista de URLs de imágenes. La primera (índice 0) será la principal.",
+    )
+
     class Meta:
         model = Inmueble
         fields = [
@@ -23,12 +31,12 @@ class InmuebleCreateSerializer(serializers.ModelSerializer):
             "ciudad",
             "latitud",
             "longitud",
-            "url_image",
             "url_propiedad",
             "parqueo",
             "piscina",
             "permite_mascotas",
             "activo",
+            "imagenes",
         ]
 
     def validate(self, attrs):
@@ -53,7 +61,13 @@ class InmuebleCreateSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        return Inmueble.objects.create(
+        imagenes_urls = validated_data.pop("imagenes", [])
+        inmueble = Inmueble.objects.create(
             asesor=self.context["request"].user,
             **validated_data,
         )
+        ImagenInmueble.objects.bulk_create([
+            ImagenInmueble(inmueble=inmueble, url=url, orden=i)
+            for i, url in enumerate(imagenes_urls)
+        ])
+        return inmueble
