@@ -409,9 +409,14 @@ function popupHtml(p) {
                 ${p.zona}, ${p.ciudad}
             </p>
             <div style="display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid #f1f5f9">
-                <span style="font-size:1.2rem;font-weight:900;color:#1e293b;letter-spacing:-0.02em">
-                    $${Number(p.precio_usd).toLocaleString()}
-                </span>
+                <div>
+                    <div style="font-size:1.2rem;font-weight:900;color:#1e293b;letter-spacing:-0.02em;line-height:1.2">
+                        $${Number(p.precio_usd).toLocaleString()} <span style="font-size:0.65rem;font-weight:700;color:#94a3b8">USD</span>
+                    </div>
+                    <div style="font-size:0.78rem;font-weight:700;color:#64748b;line-height:1.2">
+                        Bs ${Number(p.precio_bs).toLocaleString()}
+                    </div>
+                </div>
                 <div style="display:flex;gap:10px;background:#f8fafc;padding:5px 12px;border-radius:999px;border:1px solid #f1f5f9;font-size:0.75rem;font-weight:700;color:#475569;align-items:center">
                     <span style="display:flex;align-items:center;gap:3px">
                         <span class="material-symbols-outlined" style="font-size:15px;color:#136dec">bed</span>${p.cant_cuartos ?? '—'}
@@ -421,6 +426,10 @@ function popupHtml(p) {
                     </span>
                     ${amenIcons ? `<span style="letter-spacing:2px">${amenIcons}</span>` : ''}
                 </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:10px;font-size:0.72rem;font-weight:700;color:#64748b">
+                ${parseFloat(p.area_construida) > 0 ? `<span style="display:flex;align-items:center;gap:3px;background:#f1f5f9;padding:3px 9px;border-radius:999px"><span class="material-symbols-outlined" style="font-size:13px;color:#136dec">house</span>${parseFloat(p.area_construida)} m² const.</span>` : ''}
+                ${parseFloat(p.area_terreno) > 0 ? `<span style="display:flex;align-items:center;gap:3px;background:#f1f5f9;padding:3px 9px;border-radius:999px"><span class="material-symbols-outlined" style="font-size:13px;color:#136dec">landscape</span>${parseFloat(p.area_terreno)} m² terreno</span>` : ''}
             </div>
         </div>
     </div>`;

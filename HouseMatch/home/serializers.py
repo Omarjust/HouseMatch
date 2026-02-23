@@ -1,9 +1,18 @@
 from rest_framework import serializers
 
-from .models import ImagenInmueble, Inmueble
+from .models import Departamento, ImagenInmueble, Inmueble, TipoPropiedad, TipoTransaccion
 
 
 class InmuebleCreateSerializer(serializers.ModelSerializer):
+    tipo_propiedad = serializers.SlugRelatedField(
+        queryset=TipoPropiedad.objects.all(), slug_field='nombre'
+    )
+    tipo_transaccion = serializers.SlugRelatedField(
+        queryset=TipoTransaccion.objects.all(), slug_field='nombre'
+    )
+    departamento = serializers.SlugRelatedField(
+        queryset=Departamento.objects.all(), slug_field='nombre'
+    )
     imagenes = serializers.ListField(
         child=serializers.URLField(max_length=500),
         write_only=True,

@@ -20,8 +20,20 @@ class UsuarioAdmin(DjangoUserAdmin):
     model = Usuario
     ordering = ("id",)
     list_display = ("id", "email", "username", "is_asesor", "fecha_vencimiento_plan", "plan_activo", "is_staff", "is_active")
+    list_editable = ("is_active", "fecha_vencimiento_plan")
     list_filter = ("is_asesor", "is_staff", "is_active", "is_superuser")
     search_fields = ("email", "username", "first_name", "last_name")
+    actions = ["activar_asesores", "desactivar_asesores"]
+
+    @admin.action(description="Activar asesores seleccionados")
+    def activar_asesores(self, request, queryset):
+        updated = queryset.update(is_active=True)
+        self.message_user(request, f"{updated} asesor(es) activado(s).")
+
+    @admin.action(description="Desactivar asesores seleccionados")
+    def desactivar_asesores(self, request, queryset):
+        updated = queryset.update(is_active=False)
+        self.message_user(request, f"{updated} asesor(es) desactivado(s).")
 
     fieldsets = (
         (None, {"fields": ("email", "username", "password")}),

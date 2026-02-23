@@ -1,9 +1,26 @@
+from django.contrib.auth import authenticate
 from rest_framework import generics, permissions, status
+from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Etiqueta, Inmueble, InmuebleGuardado
 from .serializers import InmuebleCreateSerializer
+
+
+class ObtenerTokenView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
+        if not email or not password:
+            return Response({'error': 'email y password requeridos'}, status=status.HTTP_400_BAD_REQUEST)
+        user = authenticate(request, username=email, password=password)
+        if user is None:
+            return Response({'error': 'Credenciales inválidas'}, status=status.HTTP_401_UNAUTHORIZED)
+        token, _ = Token.objects.get_or_create(user=user)
+        return Response({'token': token.key})
 
 
 class InmuebleCreateAPIView(generics.CreateAPIView):
@@ -52,6 +69,8 @@ class InmuebleMapGeoJSONAPIView(APIView):
                         "imagen_principal": imagenes_list[0].url if imagenes_list else None,
                         "imagenes": [img.url for img in imagenes_list],
                         "url_propiedad": inmueble.url_propiedad,
+                        "area_construida": str(inmueble.area_construida),
+                        "area_terreno": str(inmueble.area_terreno),
                         "tipo_propiedad": inmueble.tipo_propiedad.nombre,
                         "tipo_transaccion": inmueble.tipo_transaccion.nombre,
                         "departamento": inmueble.departamento.nombre,

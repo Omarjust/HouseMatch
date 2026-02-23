@@ -25,7 +25,12 @@ SECRET_KEY = 'django-insecure-67**6%d-j&)-*fmrx+waemf^^5m*xd-y49f=@!@)6p*(*9ro&4
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.0.40','localhost', '127.0.0.1','housematch.onrender.com']
+ALLOWED_HOSTS = ['192.168.0.40','localhost', '127.0.0.1','housematch.onrender.com','dc95-2800-320-421a-1300-347a-db38-4173-4e02.ngrok-free.app']
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://dc95-2800-320-421a-1300-347a-db38-4173-4e02.ngrok-free.app',
+    'https://housematch.onrender.com',
+]
 
 
 # Application definition
@@ -38,8 +43,16 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework.authtoken',
     'home',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

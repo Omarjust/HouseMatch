@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html class="light" lang="en">
+<html class="light" lang="es">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>HouseMatch | Login</title>
+<title>HouseMatch | Registro</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -33,7 +33,6 @@
 <style>
     body {
         font-family: 'Inter', sans-serif;
-        overflow: hidden;
     }
     .glass-card {
         background: rgba(255, 255, 255, 0.7);
@@ -69,9 +68,17 @@
         background-image: radial-gradient(rgba(19, 109, 236, 0.05) 1px, transparent 1px);
         background-size: 40px 40px;
     }
+    /* Toggle switch */
+    .toggle-checkbox:checked {
+        right: 0;
+        border-color: #136dec;
+    }
+    .toggle-checkbox:checked + .toggle-label {
+        background-color: #136dec;
+    }
 </style>
 </head>
-<body class="bg-background-light dark:bg-background-dark min-h-screen flex items-center justify-center relative">
+<body class="bg-background-light dark:bg-background-dark min-h-screen flex items-center justify-center relative py-10">
 
 <!-- Animated Background -->
 <div class="fixed inset-0 grid-bg pointer-events-none"></div>
@@ -90,7 +97,7 @@
         </div>
     </div>
 
-    <!-- Login Card -->
+    <!-- Register Card -->
     <div class="glass-card p-10 rounded-xl shadow-2xl flex flex-col items-center">
 
         <!-- Logo -->
@@ -102,24 +109,61 @@
                 </svg>
             </div>
             <h1 class="text-2xl font-bold text-slate-900 tracking-tight">HouseMatch</h1>
-            <p class="text-slate-500 text-sm">Welcome home to the future</p>
+            <p class="text-slate-500 text-sm">Crea tu cuenta gratis</p>
         </div>
 
         <!-- Error Messages -->
-        {% if error %}
-        <div class="w-full mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm flex items-center gap-2">
-            <span class="material-symbols-outlined text-base">error</span>
-            {{ error }}
+        {% if errores %}
+        <div class="w-full mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm space-y-1">
+            {% for error in errores %}
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-base flex-shrink-0">error</span>
+                {{ error }}
+            </div>
+            {% endfor %}
         </div>
         {% endif %}
 
         <!-- Form -->
-        <form class="w-full space-y-5" method="post" action="{% url 'home:login' %}">
+        <form class="w-full space-y-5" method="post" action="{% url 'home:registro' %}">
             {% csrf_token %}
-            {% if next %}
-            <input type="hidden" name="next" value="{{ next }}">
-            {% endif %}
 
+            <!-- Nombre -->
+            <div class="space-y-2">
+                <label class="text-sm font-medium text-slate-700 ml-1" for="nombre">Nombre completo</label>
+                <div class="relative">
+                    <input
+                        id="nombre"
+                        name="nombre"
+                        type="text"
+                        required
+                        autocomplete="name"
+                        value="{{ nombre|default:'' }}"
+                        placeholder="Tu nombre completo"
+                        class="w-full h-12 px-4 bg-white/50 border border-slate-200 rounded-lg outline-none focus:border-primary transition-all duration-300 glow-input text-slate-900 placeholder:text-slate-400"
+                    />
+                    <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">person</span>
+                </div>
+            </div>
+
+            <!-- Username -->
+            <div class="space-y-2">
+                <label class="text-sm font-medium text-slate-700 ml-1" for="username">Nombre de usuario</label>
+                <div class="relative">
+                    <input
+                        id="username"
+                        name="username"
+                        type="text"
+                        autocomplete="username"
+                        value="{{ username|default:'' }}"
+                        placeholder="@tu_usuario"
+                        class="w-full h-12 px-4 bg-white/50 border border-slate-200 rounded-lg outline-none focus:border-primary transition-all duration-300 glow-input text-slate-900 placeholder:text-slate-400"
+                    />
+                    <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">alternate_email</span>
+                </div>
+            </div>
+
+            <!-- Email -->
             <div class="space-y-2">
                 <label class="text-sm font-medium text-slate-700 ml-1" for="email">Email</label>
                 <div class="relative">
@@ -130,45 +174,127 @@
                         required
                         autocomplete="email"
                         value="{{ email|default:'' }}"
-                        placeholder="Enter your email"
+                        placeholder="tu@email.com"
                         class="w-full h-12 px-4 bg-white/50 border border-slate-200 rounded-lg outline-none focus:border-primary transition-all duration-300 glow-input text-slate-900 placeholder:text-slate-400"
                     />
                     <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">mail</span>
                 </div>
             </div>
 
+            <!-- Contraseña -->
             <div class="space-y-2">
-                <label class="text-sm font-medium text-slate-700 ml-1" for="password">Password</label>
+                <label class="text-sm font-medium text-slate-700 ml-1" for="password1">Contraseña</label>
                 <div class="relative">
                     <input
-                        id="password"
-                        name="password"
+                        id="password1"
+                        name="password1"
                         type="password"
                         required
-                        autocomplete="current-password"
-                        placeholder="Enter your password"
+                        minlength="8"
+                        autocomplete="new-password"
+                        placeholder="Mínimo 8 caracteres"
                         class="w-full h-12 px-4 bg-white/50 border border-slate-200 rounded-lg outline-none focus:border-primary transition-all duration-300 glow-input text-slate-900 placeholder:text-slate-400"
                     />
                     <span
                         class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg cursor-pointer hover:text-primary"
-                        id="toggle-password"
+                        id="toggle-password1"
                     >visibility</span>
                 </div>
+            </div>
+
+            <!-- Confirmar contraseña -->
+            <div class="space-y-2">
+                <label class="text-sm font-medium text-slate-700 ml-1" for="password2">Confirmar contraseña</label>
+                <div class="relative">
+                    <input
+                        id="password2"
+                        name="password2"
+                        type="password"
+                        required
+                        minlength="8"
+                        autocomplete="new-password"
+                        placeholder="Repite tu contraseña"
+                        class="w-full h-12 px-4 bg-white/50 border border-slate-200 rounded-lg outline-none focus:border-primary transition-all duration-300 glow-input text-slate-900 placeholder:text-slate-400"
+                    />
+                    <span
+                        class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg cursor-pointer hover:text-primary"
+                        id="toggle-password2"
+                    >visibility</span>
+                </div>
+            </div>
+
+            <!-- Toggle Soy asesor -->
+            <div class="flex items-center justify-between px-1 py-2 rounded-lg bg-slate-50/70 border border-slate-100">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary text-xl">badge</span>
+                    <div>
+                        <p class="text-sm font-medium text-slate-700">Soy asesor inmobiliario</p>
+                        <p class="text-xs text-slate-400">Activa esta opción si eres asesor para mas herramientas</p>
+                    </div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input
+                        type="checkbox"
+                        name="es_asesor"
+                        id="es_asesor"
+                        class="sr-only peer"
+                        {% if es_asesor %}checked{% endif %}
+                    />
+                    <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                </label>
+            </div>
+
+            <!-- Asesor extra fields (empresa + id externo) -->
+            <div id="asesor-fields" class="space-y-4 {% if not es_asesor %}hidden{% endif %}">
+
+                <!-- Select empresa -->
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-slate-700 ml-1" for="empresa_id">Empresa</label>
+                    <select
+                        id="empresa_id"
+                        name="empresa_id"
+                        class="w-full h-12 px-4 bg-white/50 border border-slate-200 rounded-lg outline-none focus:border-primary transition-all duration-300 glow-input text-slate-900"
+                    >
+                        <option value="">— Sin empresa —</option>
+                        {% for emp in empresas %}
+                        <option value="{{ emp.pk }}" {% if empresa_id|stringformat:"s" == emp.pk|stringformat:"s" %}selected{% endif %}>
+                            {{ emp.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- ID externo -->
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-slate-700 ml-1" for="id_asesor_externo">ID en la empresa</label>
+                    <div class="relative">
+                        <input
+                            id="id_asesor_externo"
+                            name="id_asesor_externo"
+                            type="text"
+                            value="{{ id_asesor_externo|default:'' }}"
+                            placeholder="Ej. AGT-001"
+                            class="w-full h-12 px-4 bg-white/50 border border-slate-200 rounded-lg outline-none focus:border-primary transition-all duration-300 glow-input text-slate-900 placeholder:text-slate-400"
+                        />
+                        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">tag</span>
+                    </div>
+                </div>
+
             </div>
 
             <button
                 type="submit"
                 class="w-full h-12 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg shadow-lg shadow-primary/20 transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 uppercase tracking-wider text-sm"
             >
-                Login
+                Crear cuenta
             </button>
         </form>
 
         <!-- Footer -->
         <div class="mt-8 pt-6 border-t border-slate-100 w-full text-center">
             <p class="text-sm text-slate-500">
-                Don't have an account?
-                <a class="text-primary font-bold hover:underline transition-all" href="{% url 'home:registro' %}">Sign Up</a>
+                ¿Ya tienes cuenta?
+                <a class="text-primary font-bold hover:underline transition-all" href="{% url 'home:login' %}">Iniciar sesión</a>
             </p>
         </div>
     </div>
@@ -194,16 +320,25 @@
     });
 
     // Toggle password visibility
-    const toggle = document.getElementById('toggle-password');
-    const passwordInput = document.getElementById('password');
-    toggle.addEventListener('click', () => {
-        if (passwordInput.type === 'password') {
-            passwordInput.type = 'text';
-            toggle.textContent = 'visibility_off';
-        } else {
-            passwordInput.type = 'password';
-            toggle.textContent = 'visibility';
-        }
+    function makeToggle(toggleId, inputId) {
+        const toggle = document.getElementById(toggleId);
+        const input = document.getElementById(inputId);
+        toggle.addEventListener('click', () => {
+            if (input.type === 'password') {
+                input.type = 'text';
+                toggle.textContent = 'visibility_off';
+            } else {
+                input.type = 'password';
+                toggle.textContent = 'visibility';
+            }
+        });
+    }
+    makeToggle('toggle-password1', 'password1');
+    makeToggle('toggle-password2', 'password2');
+
+    // Show/hide asesor fields on toggle
+    document.getElementById('es_asesor').addEventListener('change', function () {
+        document.getElementById('asesor-fields').classList.toggle('hidden', !this.checked);
     });
 </script>
 </body>
