@@ -101,6 +101,23 @@
         .clip-path-slant {
              clip-path: polygon(0 15%, 100% 0, 100% 85%, 0% 100%);
         }
+        @keyframes marquee-left {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        @keyframes marquee-right {
+            0% { transform: translateX(-50%); }
+            100% { transform: translateX(0); }
+        }
+        .animate-marquee-left {
+            animation: marquee-left 60s linear infinite;
+        }
+        .animate-marquee-right {
+            animation: marquee-right 60s linear infinite;
+        }
+        .animate-marquee-left:hover, .animate-marquee-right:hover {
+            animation-play-state: paused;
+        }
     </style>
 </head>
 <body class="bg-background-light text-text-main font-display antialiased overflow-x-hidden selection:bg-primary selection:text-white">
@@ -136,9 +153,14 @@
 <div class="hidden md:block">
 <div class="ml-10 flex items-baseline space-x-8">
 <a class="text-slate-600 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-all hover:bg-slate-50" href="{% url 'home:pricing' %}">Precios</a>
+{% if user.is_authenticated %}
+<a class="text-slate-600 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-all hover:bg-slate-50" href="{% url 'home:mapa' %}">Mapa</a>
+<a class="bg-white border border-primary text-primary hover:bg-primary hover:text-white px-5 py-2 rounded-full text-sm font-medium transition-all shadow-sm hover:shadow-primary/30" href="{% url 'home:logout' %}">Cerrar sesión</a>
+{% else %}
 <a class="text-slate-600 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-all hover:bg-slate-50" href="#">Agents</a>
 <a class="text-slate-600 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-all hover:bg-slate-50" href="#">AI Match</a>
-<a class="bg-white border border-primary text-primary hover:bg-primary hover:text-white px-5 py-2 rounded-full text-sm font-medium transition-all shadow-sm hover:shadow-primary/30" href="#">Sign In</a>
+<a class="bg-white border border-primary text-primary hover:bg-primary hover:text-white px-5 py-2 rounded-full text-sm font-medium transition-all shadow-sm hover:shadow-primary/30" href="{% url 'home:login' %}">Log In</a>
+{% endif %}
 </div>
 </div>
 <div class="-mr-2 flex md:hidden">
@@ -411,6 +433,152 @@ Más rapidez. Más control. Más cierres.
 <div class="w-full md:w-1/2 text-center md:text-left">
 <h3 class="text-2xl font-bold text-slate-900 mb-3 md:hidden">Close Deal</h3>
 <p class="text-slate-500 text-lg">Submit offers digitally and sign smart contracts. Move into your new future home without the paperwork headache.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="py-24 bg-white overflow-hidden">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16 text-center">
+<span class="text-primary font-semibold tracking-wider text-sm uppercase mb-2 block">Historias de Clientes</span>
+<h2 class="text-4xl font-bold text-slate-900">Lo Que Dicen Nuestros Clientes</h2>
+</div>
+<div class="space-y-8">
+<!-- Fila 1: derecha -->
+<div class="flex overflow-hidden relative">
+<div class="flex gap-8 animate-marquee-right whitespace-nowrap py-4 min-w-full">
+<div class="flex-shrink-0 w-80 p-8 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="flex items-center gap-1 mb-4 text-primary"><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span></div>
+<p class="text-slate-600 mb-6 whitespace-normal leading-relaxed text-sm">"Encontré mi departamento ideal en Santa Cruz en menos de una semana. Increíble plataforma."</p>
+<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-xs">MR</div><span class="text-slate-900 font-semibold uppercase tracking-tight text-xs">María Rodríguez</span></div>
+</div>
+<div class="flex-shrink-0 w-80 p-8 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="flex items-center gap-1 mb-4 text-primary"><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span></div>
+<p class="text-slate-600 mb-6 whitespace-normal leading-relaxed text-sm">"El mapa interactivo es genial. Pude filtrar por zona y precio sin complicaciones."</p>
+<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-xs">JV</div><span class="text-slate-900 font-semibold uppercase tracking-tight text-xs">Juan Vargas</span></div>
+</div>
+<div class="flex-shrink-0 w-80 p-8 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="flex items-center gap-1 mb-4 text-primary"><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span></div>
+<p class="text-slate-600 mb-6 whitespace-normal leading-relaxed text-sm">"La atención del asesor fue excelente. Me respondió al instante y cerré trato en días."</p>
+<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-xs">AM</div><span class="text-slate-900 font-semibold uppercase tracking-tight text-xs">Andrea Morales</span></div>
+</div>
+<div class="flex-shrink-0 w-80 p-8 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="flex items-center gap-1 mb-4 text-primary"><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span></div>
+<p class="text-slate-600 mb-6 whitespace-normal leading-relaxed text-sm">"Busqué casa con piscina en Zona Norte y HouseMatch me la mostró al instante. ¡Perfecto!"</p>
+<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-xs">CP</div><span class="text-slate-900 font-semibold uppercase tracking-tight text-xs">Carlos Pereira</span></div>
+</div>
+<!-- duplicado para loop continuo -->
+<div class="flex-shrink-0 w-80 p-8 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="flex items-center gap-1 mb-4 text-primary"><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span></div>
+<p class="text-slate-600 mb-6 whitespace-normal leading-relaxed text-sm">"Encontré mi departamento ideal en Santa Cruz en menos de una semana. Increíble plataforma."</p>
+<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-xs">MR</div><span class="text-slate-900 font-semibold uppercase tracking-tight text-xs">María Rodríguez</span></div>
+</div>
+<div class="flex-shrink-0 w-80 p-8 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="flex items-center gap-1 mb-4 text-primary"><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span></div>
+<p class="text-slate-600 mb-6 whitespace-normal leading-relaxed text-sm">"El mapa interactivo es genial. Pude filtrar por zona y precio sin complicaciones."</p>
+<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-xs">JV</div><span class="text-slate-900 font-semibold uppercase tracking-tight text-xs">Juan Vargas</span></div>
+</div>
+<div class="flex-shrink-0 w-80 p-8 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="flex items-center gap-1 mb-4 text-primary"><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span></div>
+<p class="text-slate-600 mb-6 whitespace-normal leading-relaxed text-sm">"La atención del asesor fue excelente. Me respondió al instante y cerré trato en días."</p>
+<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-xs">AM</div><span class="text-slate-900 font-semibold uppercase tracking-tight text-xs">Andrea Morales</span></div>
+</div>
+<div class="flex-shrink-0 w-80 p-8 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="flex items-center gap-1 mb-4 text-primary"><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span></div>
+<p class="text-slate-600 mb-6 whitespace-normal leading-relaxed text-sm">"Busqué casa con piscina en Zona Norte y HouseMatch me la mostró al instante. ¡Perfecto!"</p>
+<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-xs">CP</div><span class="text-slate-900 font-semibold uppercase tracking-tight text-xs">Carlos Pereira</span></div>
+</div>
+</div>
+</div>
+<!-- Fila 2: izquierda -->
+<div class="flex overflow-hidden relative">
+<div class="flex gap-8 animate-marquee-left whitespace-nowrap py-4 min-w-full">
+<div class="flex-shrink-0 w-80 p-8 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="flex items-center gap-1 mb-4 text-primary"><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span></div>
+<p class="text-slate-600 mb-6 whitespace-normal leading-relaxed text-sm">"Muy recomendable para inversores. Encontré terrenos con valor justo en La Paz."</p>
+<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-xs">RL</div><span class="text-slate-900 font-semibold uppercase tracking-tight text-xs">Roberto López</span></div>
+</div>
+<div class="flex-shrink-0 w-80 p-8 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="flex items-center gap-1 mb-4 text-primary"><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span></div>
+<p class="text-slate-600 mb-6 whitespace-normal leading-relaxed text-sm">"Las fotos y descripciones son muy detalladas. No hubo sorpresas al ver la propiedad."</p>
+<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-xs">SG</div><span class="text-slate-900 font-semibold uppercase tracking-tight text-xs">Sofía Gutiérrez</span></div>
+</div>
+<div class="flex-shrink-0 w-80 p-8 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="flex items-center gap-1 mb-4 text-primary"><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span></div>
+<p class="text-slate-600 mb-6 whitespace-normal leading-relaxed text-sm">"El filtro de precio en USD y Bs. es justo lo que necesitaba. Muy pensado para Bolivia."</p>
+<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-xs">DQ</div><span class="text-slate-900 font-semibold uppercase tracking-tight text-xs">Diego Quispe</span></div>
+</div>
+<div class="flex-shrink-0 w-80 p-8 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="flex items-center gap-1 mb-4 text-primary"><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span></div>
+<p class="text-slate-600 mb-6 whitespace-normal leading-relaxed text-sm">"Guardé mis favoritos con etiquetas y pude comparar opciones fácilmente. Excelente."</p>
+<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-xs">VF</div><span class="text-slate-900 font-semibold uppercase tracking-tight text-xs">Valentina Flores</span></div>
+</div>
+<!-- duplicado para loop continuo -->
+<div class="flex-shrink-0 w-80 p-8 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="flex items-center gap-1 mb-4 text-primary"><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span></div>
+<p class="text-slate-600 mb-6 whitespace-normal leading-relaxed text-sm">"Muy recomendable para inversores. Encontré terrenos con valor justo en La Paz."</p>
+<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-xs">RL</div><span class="text-slate-900 font-semibold uppercase tracking-tight text-xs">Roberto López</span></div>
+</div>
+<div class="flex-shrink-0 w-80 p-8 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="flex items-center gap-1 mb-4 text-primary"><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span></div>
+<p class="text-slate-600 mb-6 whitespace-normal leading-relaxed text-sm">"Las fotos y descripciones son muy detalladas. No hubo sorpresas al ver la propiedad."</p>
+<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-xs">SG</div><span class="text-slate-900 font-semibold uppercase tracking-tight text-xs">Sofía Gutiérrez</span></div>
+</div>
+<div class="flex-shrink-0 w-80 p-8 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="flex items-center gap-1 mb-4 text-primary"><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span></div>
+<p class="text-slate-600 mb-6 whitespace-normal leading-relaxed text-sm">"El filtro de precio en USD y Bs. es justo lo que necesitaba. Muy pensado para Bolivia."</p>
+<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-xs">DQ</div><span class="text-slate-900 font-semibold uppercase tracking-tight text-xs">Diego Quispe</span></div>
+</div>
+<div class="flex-shrink-0 w-80 p-8 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="flex items-center gap-1 mb-4 text-primary"><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span></div>
+<p class="text-slate-600 mb-6 whitespace-normal leading-relaxed text-sm">"Guardé mis favoritos con etiquetas y pude comparar opciones fácilmente. Excelente."</p>
+<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-xs">VF</div><span class="text-slate-900 font-semibold uppercase tracking-tight text-xs">Valentina Flores</span></div>
+</div>
+</div>
+</div>
+<!-- Fila 3: derecha -->
+<div class="flex overflow-hidden relative">
+<div class="flex gap-8 animate-marquee-right whitespace-nowrap py-4 min-w-full">
+<div class="flex-shrink-0 w-80 p-8 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="flex items-center gap-1 mb-4 text-primary"><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span></div>
+<p class="text-slate-600 mb-6 whitespace-normal leading-relaxed text-sm">"HouseMatch es claramente el futuro del sector inmobiliario en Bolivia. Lo recomiendo."</p>
+<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-xs">PM</div><span class="text-slate-900 font-semibold uppercase tracking-tight text-xs">Pablo Mamani</span></div>
+</div>
+<div class="flex-shrink-0 w-80 p-8 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="flex items-center gap-1 mb-4 text-primary"><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span></div>
+<p class="text-slate-600 mb-6 whitespace-normal leading-relaxed text-sm">"La comunicación directa con el captador me ahorró tiempo y comisiones innecesarias."</p>
+<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-xs">NE</div><span class="text-slate-900 font-semibold uppercase tracking-tight text-xs">Natalia Espinoza</span></div>
+</div>
+<div class="flex-shrink-0 w-80 p-8 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="flex items-center gap-1 mb-4 text-primary"><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span></div>
+<p class="text-slate-600 mb-6 whitespace-normal leading-relaxed text-sm">"Todo muy profesional. Desde buscar hasta contactar al asesor fue rápido y sin estrés."</p>
+<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-xs">FC</div><span class="text-slate-900 font-semibold uppercase tracking-tight text-xs">Fernando Chávez</span></div>
+</div>
+<div class="flex-shrink-0 w-80 p-8 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="flex items-center gap-1 mb-4 text-primary"><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span></div>
+<p class="text-slate-600 mb-6 whitespace-normal leading-relaxed text-sm">"Transición perfecta de buscar a visitar. Sin trámites engorrosos. Simplemente genial."</p>
+<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-xs">LT</div><span class="text-slate-900 font-semibold uppercase tracking-tight text-xs">Lucía Torres</span></div>
+</div>
+<!-- duplicado para loop continuo -->
+<div class="flex-shrink-0 w-80 p-8 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="flex items-center gap-1 mb-4 text-primary"><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span></div>
+<p class="text-slate-600 mb-6 whitespace-normal leading-relaxed text-sm">"HouseMatch es claramente el futuro del sector inmobiliario en Bolivia. Lo recomiendo."</p>
+<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-xs">PM</div><span class="text-slate-900 font-semibold uppercase tracking-tight text-xs">Pablo Mamani</span></div>
+</div>
+<div class="flex-shrink-0 w-80 p-8 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="flex items-center gap-1 mb-4 text-primary"><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span></div>
+<p class="text-slate-600 mb-6 whitespace-normal leading-relaxed text-sm">"La comunicación directa con el captador me ahorró tiempo y comisiones innecesarias."</p>
+<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-xs">NE</div><span class="text-slate-900 font-semibold uppercase tracking-tight text-xs">Natalia Espinoza</span></div>
+</div>
+<div class="flex-shrink-0 w-80 p-8 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="flex items-center gap-1 mb-4 text-primary"><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span></div>
+<p class="text-slate-600 mb-6 whitespace-normal leading-relaxed text-sm">"Todo muy profesional. Desde buscar hasta contactar al asesor fue rápido y sin estrés."</p>
+<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-xs">FC</div><span class="text-slate-900 font-semibold uppercase tracking-tight text-xs">Fernando Chávez</span></div>
+</div>
+<div class="flex-shrink-0 w-80 p-8 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="flex items-center gap-1 mb-4 text-primary"><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span><span class="material-icons text-sm">star</span></div>
+<p class="text-slate-600 mb-6 whitespace-normal leading-relaxed text-sm">"Transición perfecta de buscar a visitar. Sin trámites engorrosos. Simplemente genial."</p>
+<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-xs">LT</div><span class="text-slate-900 font-semibold uppercase tracking-tight text-xs">Lucía Torres</span></div>
 </div>
 </div>
 </div>

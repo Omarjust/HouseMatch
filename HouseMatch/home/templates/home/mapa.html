@@ -144,6 +144,14 @@
             <div id="stats-badge" class="hidden items-center gap-2 px-4 py-2 rounded-full bg-slate-50 border border-slate-200 text-slate-600 font-semibold text-sm">
                 <span class="material-symbols-outlined text-lg text-[#136dec]">apartment</span>
                 <span id="stats-count">0 inmuebles</span>
+                {% if user.is_authenticated %}
+                <a href="{% url 'home:etiquetas' %}"
+                   title="Mis etiquetas guardadas"
+                   class="flex items-center justify-center hover:scale-110 transition-transform"
+                   style="color:#e11d48;line-height:1">
+                    <span class="material-icons" style="font-size:18px">favorite</span>
+                </a>
+                {% endif %}
             </div>
 
             {% if user.is_authenticated %}
@@ -289,6 +297,17 @@
 <main class="flex-1 relative overflow-hidden">
     <div id="map"></div>
 
+    <!-- Empty state overlay -->
+    <div id="map-empty-msg"
+         class="absolute inset-0 flex items-center justify-center z-[400] pointer-events-none">
+      <div class="bg-white/80 backdrop-blur rounded-xl px-6 py-4 text-center shadow">
+        <span class="material-icons text-4xl text-gray-400">map</span>
+        <p class="text-gray-600 mt-1 text-sm font-medium">
+          Usa los filtros para buscar propiedades
+        </p>
+      </div>
+    </div>
+
     <!-- Zoom controls -->
     <div class="absolute bottom-10 left-10 flex flex-col gap-3 z-[400]">
         <button onclick="mapInst.zoomIn()"
@@ -315,6 +334,9 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
+// ── Auth flag (set by Django template) ────────────────────────
+const IS_AUTHENTICATED = {% if user.is_authenticated %}true{% else %}false{% endif %};
+
 // ── Map init ──────────────────────────────────────────────────
 const SANTA_CRUZ = [-17.7833, -63.1821];
 const mapInst = L.map('map', { zoomControl: false }).setView(SANTA_CRUZ, 12);
@@ -354,11 +376,21 @@ function popupHtml(p) {
                <span class="material-icons" style="font-size:48px;color:#cbd5e1">home</span>
            </div>`;
 
-    const badge = p.url_propiedad
-        ? `<a href="${p.url_propiedad}" target="_blank" rel="noopener"
-              style="position:absolute;top:12px;right:12px;background:#136dec;color:white;font-size:10px;font-weight:900;padding:6px 12px;border-radius:12px;text-decoration:none;box-shadow:0 4px 12px rgba(19,109,236,0.3)">
-              VER DETALLE
-           </a>`
+    const badge = `<a href="/inmuebles/${p.id}/" target="_blank" rel="noopener"
+        style="position:absolute;top:12px;right:12px;background:#136dec;color:white;
+               font-size:10px;font-weight:900;padding:6px 12px;border-radius:12px;
+               text-decoration:none;box-shadow:0 4px 12px rgba(19,109,236,0.3)">
+        VER DETALLE
+    </a>`;
+
+    const heartBtn = IS_AUTHENTICATED
+        ? `<button data-heart="${p.id}"
+               style="position:absolute;top:10px;left:12px;background:rgba(255,255,255,0.92);
+                      border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;
+                      display:flex;align-items:center;justify-content:center;
+                      box-shadow:0 2px 8px rgba(0,0,0,0.15);padding:0">
+               <span class="material-icons" style="font-size:18px;color:#e11d48">favorite_border</span>
+           </button>`
         : '';
 
     const amenIcons = [
@@ -373,6 +405,7 @@ function popupHtml(p) {
             ${imgHtml}
             <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.4) 0%,transparent 60%)"></div>
             ${badge}
+            ${heartBtn}
         </div>
         <div style="padding:20px;">
             <p style="margin:0 0 4px;font-size:1.05rem;font-weight:800;color:#136dec;line-height:1.3">${p.titulo}</p>
@@ -419,6 +452,11 @@ function render(features) {
         const b = activeLayer.getBounds();
         if (b.isValid()) mapInst.fitBounds(b, { padding: [60, 60] });
     }
+
+    const emptyMsg = document.getElementById('map-empty-msg');
+    if (emptyMsg) {
+        emptyMsg.style.display = features.length === 0 ? 'flex' : 'none';
+    }
 }
 
 // ── Filters ───────────────────────────────────────────────────
@@ -433,7 +471,8 @@ function applyFilters() {
     const filtered = allFeatures.filter(f => {
         const p    = f.properties;
         const text = `${p.titulo} ${p.zona} ${p.ciudad} ${p.calle}`.toLowerCase();
-        if (q && !text.includes(q)) return false;
+        const words = q.split(/\s+/).filter(Boolean);
+        if (words.length > 0 && !words.every(w => text.includes(w))) return false;
 
         const price = parseFloat(p.precio_usd);
         if (price < minP || price > maxP) return false;
@@ -461,7 +500,7 @@ fetch('/api/inmuebles/mapa/')
     .then(r => r.json())
     .then(geo => {
         allFeatures = geo.features || [];
-        render(allFeatures);
+        // No se llama render() → mapa inicia vacío
     })
     .catch(() => {
         document.getElementById('stats-count').textContent = 'Error al cargar';
@@ -498,6 +537,189 @@ function toggleAmenity(name) {
 function centerBolivia() {
     mapInst.setView(SANTA_CRUZ, 12);
 }
+
+// ── Heart modal ───────────────────────────────────────────────
+function getCsrfToken() {
+    return document.cookie.split(';')
+        .map(c => c.trim())
+        .find(c => c.startsWith('csrftoken='))
+        ?.split('=')[1] ?? '';
+}
+
+let currentInmuebleId = null;
+
+async function openHeartModal(inmuebleId) {
+    currentInmuebleId = inmuebleId;
+    const modal = document.getElementById('heart-modal');
+    const feedback = document.getElementById('heart-feedback');
+    feedback.textContent = '';
+    feedback.style.color = '';
+    document.getElementById('new-etiqueta-input').value = '';
+    modal.style.display = 'flex';
+
+    try {
+        const res = await fetch('/api/etiquetas/', {
+            headers: { 'X-CSRFToken': getCsrfToken() }
+        });
+        if (!res.ok) throw new Error();
+        const etiquetas = await res.json();
+        renderEtiquetas(etiquetas);
+    } catch {
+        document.getElementById('heart-etiquetas-list').innerHTML =
+            '<p style="color:#64748b;font-size:0.85rem">No se pudieron cargar las etiquetas.</p>';
+    }
+}
+
+function renderEtiquetas(etiquetas) {
+    const list = document.getElementById('heart-etiquetas-list');
+    if (!etiquetas.length) {
+        list.innerHTML = '<p style="color:#94a3b8;font-size:0.85rem;margin:0">Sin etiquetas aún. Crea una abajo.</p>';
+        return;
+    }
+    list.innerHTML = etiquetas.map(e => `
+        <button onclick="guardarEnEtiqueta(${e.id})"
+                style="display:block;width:100%;text-align:left;padding:8px 14px;
+                       border:1.5px solid #e2e8f0;border-radius:10px;background:white;
+                       font-family:'Inter',sans-serif;font-size:0.875rem;font-weight:600;
+                       color:#334155;cursor:pointer;transition:border-color 0.15s,background 0.15s"
+                onmouseover="this.style.borderColor='#136dec';this.style.background='#eff6ff'"
+                onmouseout="this.style.borderColor='#e2e8f0';this.style.background='white'">
+            ${e.nombre}
+        </button>`).join('');
+}
+
+async function guardarEnEtiqueta(etiquetaId) {
+    const feedback = document.getElementById('heart-feedback');
+    try {
+        const res = await fetch(`/api/etiquetas/${etiquetaId}/guardados/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken(),
+            },
+            body: JSON.stringify({ inmueble: currentInmuebleId }),
+        });
+        const data = await res.json();
+        if (res.status === 201) {
+            feedback.textContent = '¡Guardado correctamente!';
+            feedback.style.color = '#16a34a';
+            setTimeout(closeHeartModal, 1200);
+        } else {
+            const msg = typeof data === 'object' ? Object.values(data).flat().join(' ') : 'Error al guardar.';
+            feedback.textContent = msg;
+            feedback.style.color = '#dc2626';
+        }
+    } catch {
+        feedback.textContent = 'Error de conexión.';
+        feedback.style.color = '#dc2626';
+    }
+}
+
+async function crearYGuardar() {
+    const input = document.getElementById('new-etiqueta-input');
+    const nombre = input.value.trim();
+    const feedback = document.getElementById('heart-feedback');
+    if (!nombre) {
+        feedback.textContent = 'Escribe un nombre para la etiqueta.';
+        feedback.style.color = '#dc2626';
+        return;
+    }
+    try {
+        const res = await fetch('/api/etiquetas/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken(),
+            },
+            body: JSON.stringify({ nombre }),
+        });
+        const data = await res.json();
+        if (res.status === 201) {
+            await guardarEnEtiqueta(data.id);
+        } else {
+            const msg = typeof data === 'object' ? Object.values(data).flat().join(' ') : 'Error al crear etiqueta.';
+            feedback.textContent = msg;
+            feedback.style.color = '#dc2626';
+        }
+    } catch {
+        feedback.textContent = 'Error de conexión.';
+        feedback.style.color = '#dc2626';
+    }
+}
+
+function closeHeartModal() {
+    document.getElementById('heart-modal').style.display = 'none';
+    currentInmuebleId = null;
+}
+
+// Event delegation for heart buttons (Leaflet popups are dynamic)
+document.addEventListener('click', e => {
+    const btn = e.target.closest('[data-heart]');
+    if (btn) {
+        e.stopPropagation();
+        openHeartModal(Number(btn.dataset.heart));
+    }
+});
 </script>
+
+<!-- ── Heart modal ── -->
+<div id="heart-modal"
+     style="display:none;position:fixed;inset:0;z-index:9999;
+            background:rgba(15,23,42,0.55);
+            align-items:center;justify-content:center;
+            font-family:'Inter',sans-serif">
+    <div style="background:white;border-radius:20px;padding:28px;width:340px;max-width:calc(100vw - 32px);
+                box-shadow:0 24px 48px -12px rgba(0,0,0,0.25);position:relative">
+
+        <!-- Header -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+            <div style="display:flex;align-items:center;gap:8px">
+                <span class="material-icons" style="color:#e11d48;font-size:22px">favorite</span>
+                <span style="font-size:1rem;font-weight:800;color:#1e293b">Guardar en etiqueta</span>
+            </div>
+            <button onclick="closeHeartModal()"
+                    style="background:none;border:none;cursor:pointer;color:#94a3b8;padding:4px;
+                           border-radius:8px;display:flex;align-items:center;justify-content:center"
+                    onmouseover="this.style.color='#334155'" onmouseout="this.style.color='#94a3b8'">
+                <span class="material-icons" style="font-size:20px">close</span>
+            </button>
+        </div>
+
+        <!-- Existing tags list -->
+        <div id="heart-etiquetas-list"
+             style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;
+                    max-height:200px;overflow-y:auto">
+            <p style="color:#94a3b8;font-size:0.85rem;margin:0">Cargando etiquetas...</p>
+        </div>
+
+        <!-- Divider -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+            <div style="flex:1;height:1px;background:#f1f5f9"></div>
+            <span style="font-size:0.7rem;font-weight:700;color:#94a3b8;white-space:nowrap">o crear nueva</span>
+            <div style="flex:1;height:1px;background:#f1f5f9"></div>
+        </div>
+
+        <!-- New tag input -->
+        <div style="display:flex;gap:8px">
+            <input id="new-etiqueta-input" type="text" placeholder="Nombre de la etiqueta"
+                   style="flex:1;padding:9px 14px;border:1.5px solid #e2e8f0;border-radius:10px;
+                          font-family:'Inter',sans-serif;font-size:0.875rem;font-weight:500;
+                          color:#334155;outline:none;transition:border-color 0.15s"
+                   onfocus="this.style.borderColor='#136dec'" onblur="this.style.borderColor='#e2e8f0'"
+                   onkeydown="if(event.key==='Enter') crearYGuardar()"/>
+            <button onclick="crearYGuardar()"
+                    style="padding:9px 16px;background:#136dec;color:white;border:none;border-radius:10px;
+                           font-family:'Inter',sans-serif;font-size:0.875rem;font-weight:700;
+                           cursor:pointer;white-space:nowrap;transition:background 0.15s"
+                    onmouseover="this.style.background='#0f5ecf'" onmouseout="this.style.background='#136dec'">
+                Crear y guardar
+            </button>
+        </div>
+
+        <!-- Feedback -->
+        <p id="heart-feedback" style="margin:12px 0 0;font-size:0.82rem;font-weight:600;min-height:18px"></p>
+    </div>
+</div>
+
 </body>
 </html>

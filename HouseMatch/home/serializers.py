@@ -18,6 +18,8 @@ class InmuebleCreateSerializer(serializers.ModelSerializer):
             "tipo_propiedad",
             "tipo_transaccion",
             "departamento",
+            "nombre_captador",
+            "celular_captacion",
             "titulo",
             "descripcion",
             "cant_cuartos",
@@ -62,10 +64,7 @@ class InmuebleCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         imagenes_urls = validated_data.pop("imagenes", [])
-        inmueble = Inmueble.objects.create(
-            asesor=self.context["request"].user,
-            **validated_data,
-        )
+        inmueble = Inmueble.objects.create(**validated_data)
         ImagenInmueble.objects.bulk_create([
             ImagenInmueble(inmueble=inmueble, url=url, orden=i)
             for i, url in enumerate(imagenes_urls)

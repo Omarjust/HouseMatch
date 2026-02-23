@@ -1,5 +1,8 @@
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+
+from .models import Etiqueta, Inmueble
 
 
 def home(request):
@@ -11,7 +14,29 @@ def pricing(request):
 
 
 def mapa(request):
-    return render(request, 'home/mapa.html')
+    user = request.user
+    if not user.is_authenticated:
+        login_url = reverse('home:login')
+        return redirect(f'{login_url}?next={request.path}')
+    if user.is_staff or user.is_superuser or user.plan_activo:
+        return render(request, 'home/mapa.html')
+    return redirect('home:pricing')
+
+
+def etiquetas(request):
+    user = request.user
+    if not user.is_authenticated:
+        login_url = reverse('home:login')
+        return redirect(f'{login_url}?next={request.path}')
+    if not (user.is_staff or user.is_superuser or user.plan_activo):
+        return redirect('home:pricing')
+    qs = (
+        Etiqueta.objects
+        .filter(usuario=user)
+        .prefetch_related('guardados__inmueble')
+        .order_by('nombre')
+    )
+    return render(request, 'home/etiquetas.html', {'etiquetas': qs})
 
 
 def login(request):
@@ -38,3 +63,14 @@ def login(request):
 def logout(request):
     auth_logout(request)
     return redirect('home:index')
+
+
+def detalle_inmueble(request, pk):
+    inmueble = get_object_or_404(
+        Inmueble.objects
+        .select_related('tipo_propiedad', 'tipo_transaccion', 'departamento')
+        .prefetch_related('imagenes'),
+        pk=pk,
+        activo=True,
+    )
+    return render(request, 'home/inmueble_detalle.html', {'inmueble': inmueble})

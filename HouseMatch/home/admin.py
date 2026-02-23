@@ -4,8 +4,10 @@ from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from .models import (
     Departamento,
     Empresa,
+    Etiqueta,
     ImagenInmueble,
     Inmueble,
+    InmuebleGuardado,
     PerfilAsesor,
     TipoPropiedad,
     TipoTransaccion,
@@ -17,7 +19,7 @@ from .models import (
 class UsuarioAdmin(DjangoUserAdmin):
     model = Usuario
     ordering = ("id",)
-    list_display = ("id", "email", "username", "is_asesor", "is_staff", "is_active")
+    list_display = ("id", "email", "username", "is_asesor", "fecha_vencimiento_plan", "plan_activo", "is_staff", "is_active")
     list_filter = ("is_asesor", "is_staff", "is_active", "is_superuser")
     search_fields = ("email", "username", "first_name", "last_name")
 
@@ -28,6 +30,7 @@ class UsuarioAdmin(DjangoUserAdmin):
             "Permisos",
             {"fields": ("is_active", "is_staff", "is_superuser", "is_asesor", "groups", "user_permissions")},
         ),
+        ("Plan", {"fields": ("fecha_vencimiento_plan",)}),
         ("Fechas", {"fields": ("last_login", "date_joined")}),
     )
     add_fieldsets = (
@@ -35,16 +38,20 @@ class UsuarioAdmin(DjangoUserAdmin):
             None,
             {
                 "classes": ("wide",),
-                "fields": ("email", "username", "password1", "password2", "is_asesor", "is_staff", "is_active"),
+                "fields": ("email", "username", "password1", "password2", "is_asesor", "is_staff", "is_active", "fecha_vencimiento_plan"),
             },
         ),
     )
 
+    @admin.display(boolean=True, description="Plan activo")
+    def plan_activo(self, obj):
+        return obj.plan_activo
+
 
 @admin.register(PerfilAsesor)
 class PerfilAsesorAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "empresa", "id_asesor_externo", "es_century")
-    list_filter = ("es_century", "empresa")
+    list_display = ("id", "user", "empresa", "id_asesor_externo")
+    list_filter = ("empresa",)
     search_fields = ("user__email", "user__username", "id_asesor_externo", "empresa__nombre")
 
 
@@ -61,7 +68,7 @@ class InmuebleAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "titulo",
-        "asesor",
+        "nombre_captador",
         "tipo_propiedad",
         "tipo_transaccion",
         "departamento",
@@ -71,14 +78,14 @@ class InmuebleAdmin(admin.ModelAdmin):
         "activo",
     )
     list_filter = ("activo", "tipo_propiedad", "tipo_transaccion", "departamento", "parqueo", "piscina")
-    search_fields = ("titulo", "descripcion", "calle", "zona", "ciudad", "asesor__email")
-    autocomplete_fields = ("asesor", "tipo_propiedad", "tipo_transaccion", "departamento")
+    search_fields = ("titulo", "descripcion", "calle", "zona", "ciudad", "nombre_captador", "celular_captacion")
+    autocomplete_fields = ("tipo_propiedad", "tipo_transaccion", "departamento")
 
 
 @admin.register(Empresa)
 class EmpresaAdmin(admin.ModelAdmin):
-    list_display = ("id", "nombre")
-    search_fields = ("nombre",)
+    list_display = ("id", "nombre", "codigo")
+    search_fields = ("nombre", "codigo")
 
 
 @admin.register(TipoPropiedad)
@@ -97,3 +104,17 @@ class TipoTransaccionAdmin(admin.ModelAdmin):
 class DepartamentoAdmin(admin.ModelAdmin):
     list_display = ("id", "nombre")
     search_fields = ("nombre",)
+
+
+@admin.register(Etiqueta)
+class EtiquetaAdmin(admin.ModelAdmin):
+    list_display = ("id", "nombre", "usuario", "creada_en")
+    list_filter = ("usuario",)
+    search_fields = ("nombre", "usuario__email")
+
+
+@admin.register(InmuebleGuardado)
+class InmuebleGuardadoAdmin(admin.ModelAdmin):
+    list_display = ("id", "etiqueta", "inmueble", "guardado_en")
+    list_filter = ("etiqueta__usuario",)
+    search_fields = ("etiqueta__nombre", "inmueble__titulo")
