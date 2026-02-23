@@ -88,7 +88,7 @@
 
     {% else %}
     <!-- Cards grid -->
-    <div class="grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
+    <div class="grid gap-6 grid-cols-1">
         {% for etiqueta in etiquetas %}
         {% with guardados=etiqueta.guardados.all %}
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -107,18 +107,19 @@
             <!-- Table -->
             {% if guardados %}
             <div class="overflow-x-auto">
-                <table class="w-full text-sm">
+                <table class="w-full text-sm table-fixed">
                     <thead>
                         <tr class="text-xs font-semibold text-slate-400 uppercase tracking-wide border-b border-slate-100">
-                            <th class="px-5 py-3 text-left">Título</th>
-                            <th class="px-5 py-3 text-left">Captador</th>
-                            <th class="px-5 py-3 text-left">Celular</th>
+                            <th class="px-5 py-3 text-left w-2/5">Título</th>
+                            <th class="px-5 py-3 text-left w-1/5">Captador</th>
+                            <th class="px-5 py-3 text-left w-1/5">Celular</th>
+                            <th class="px-5 py-3 w-1/5 text-right">Acciones</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         {% for guardado in guardados %}
                         <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="px-5 py-3 font-medium text-slate-800">
+                            <td class="px-5 py-3 font-medium text-slate-800 truncate">
                                 {% if guardado.inmueble.url_propiedad %}
                                 <a href="{{ guardado.inmueble.url_propiedad }}"
                                    target="_blank"
@@ -134,7 +135,7 @@
                             <td class="px-5 py-3 text-slate-600">
                                 {{ guardado.inmueble.nombre_captador|default:"—" }}
                             </td>
-                            <td class="px-5 py-3 text-slate-600">
+                            <td class="px-5 py-3 text-slate-600 whitespace-nowrap">
                                 {% if guardado.inmueble.celular_captacion %}
                                 <a href="https://wa.me/591{{ guardado.inmueble.celular_captacion }}"
                                    target="_blank"
@@ -146,6 +147,13 @@
                                 {% else %}
                                 <span class="text-slate-400">—</span>
                                 {% endif %}
+                            </td>
+                            <td class="px-5 py-3 text-right whitespace-nowrap">
+                                <a href="{% url 'home:detalle_inmueble' guardado.inmueble.pk %}"
+                                   class="inline-flex items-center gap-1 text-xs font-semibold text-[#136dec] hover:underline">
+                                    <span class="material-icons text-sm">open_in_new</span>
+                                    Ver detalles
+                                </a>
                             </td>
                         </tr>
                         {% endfor %}
