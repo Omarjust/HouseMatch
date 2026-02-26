@@ -47,7 +47,7 @@ class InmuebleMapGeoJSONAPIView(APIView):
                 Inmueble.objects.filter(activo=True, latitud__isnull=False, longitud__isnull=False)
                 .select_related("tipo_propiedad", "tipo_transaccion", "departamento")
                 .prefetch_related("imagenes")
-                .order_by("-id")
+                .order_by("-id")[:1000]
             )
 
             features = []

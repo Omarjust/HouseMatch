@@ -9,6 +9,8 @@
 <!-- Leaflet -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
 
 <!-- Fonts & Icons -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
@@ -367,6 +369,7 @@
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 // ── Auth flag (set by Django template) ────────────────────────
 const IS_AUTHENTICATED = {% if user.is_authenticated %}true{% else %}false{% endif %};
@@ -389,6 +392,7 @@ mapInst.on('click', function(e) {
 // ── State ─────────────────────────────────────────────────────
 let allFeatures  = [];
 let activeLayer  = null;
+let clusterGroup = null;
 let minRooms     = 0;
 let minBaths     = 0;
 const amenState  = { piscina: false, parqueo: false, mascotas: false };
@@ -489,7 +493,32 @@ function popupHtml(p) {
 
 // ── Render ────────────────────────────────────────────────────
 function render(features) {
-    if (activeLayer) mapInst.removeLayer(activeLayer);
+    if (clusterGroup) { mapInst.removeLayer(clusterGroup); clusterGroup = null; }
+    if (activeLayer)  { mapInst.removeLayer(activeLayer);  activeLayer  = null; }
+
+    const emptyMsg = document.getElementById('map-empty-msg');
+    if (emptyMsg) emptyMsg.style.display = features.length === 0 ? 'flex' : 'none';
+    if (!features.length) return;
+
+    clusterGroup = L.markerClusterGroup({
+        maxClusterRadius: 60,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: true,
+        iconCreateFunction: function(cluster) {
+            const count = cluster.getChildCount();
+            let color, size;
+            if (count < 10)       { color = '#93c5fd'; size = 32; }
+            else if (count < 50)  { color = '#136dec'; size = 42; }
+            else                  { color = '#1e3a8a'; size = 52; }
+            return L.divIcon({
+                html: `<div style="width:${size}px;height:${size}px;background:${color};border-radius:50%;border:3px solid rgba(255,255,255,0.8);box-shadow:0 2px 6px rgba(0,0,0,0.25);"></div>`,
+                className: '',
+                iconSize:   [size, size],
+                iconAnchor: [size/2, size/2],
+            });
+        },
+    });
 
     activeLayer = L.geoJSON(
         { type: 'FeatureCollection', features },
@@ -497,19 +526,13 @@ function render(features) {
             pointToLayer: (f, ll) => L.marker(ll, { icon: makeIcon(f.properties.tipo_propiedad) }),
             onEachFeature: (f, m) => m.bindPopup(popupHtml(f.properties), { maxWidth: 310 }),
         }
-    ).addTo(mapInst);
+    );
 
-    const n = features.length;
+    clusterGroup.addLayer(activeLayer);
+    mapInst.addLayer(clusterGroup);
 
-    if (n > 0) {
-        const b = activeLayer.getBounds();
-        if (b.isValid()) mapInst.fitBounds(b, { padding: [60, 60] });
-    }
-
-    const emptyMsg = document.getElementById('map-empty-msg');
-    if (emptyMsg) {
-        emptyMsg.style.display = features.length === 0 ? 'flex' : 'none';
-    }
+    const b = activeLayer.getBounds();
+    if (b.isValid()) mapInst.fitBounds(b, { padding: [60, 60] });
 }
 
 // ── Filters ───────────────────────────────────────────────────
