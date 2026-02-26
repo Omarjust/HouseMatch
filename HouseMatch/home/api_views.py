@@ -1,8 +1,12 @@
 from django.contrib.auth import authenticate
+from django.core.cache import cache
 from rest_framework import generics, permissions, status
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+MAPA_CACHE_KEY = 'mapa_geojson'
+MAPA_CACHE_TTL = 60  # segundos
 
 from .models import Etiqueta, Inmueble, InmuebleGuardado
 from .serializers import InmuebleCreateSerializer
@@ -30,57 +34,63 @@ class InmuebleCreateAPIView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save()
+        cache.delete(MAPA_CACHE_KEY)
 
 
 class InmuebleMapGeoJSONAPIView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        inmuebles = (
-            Inmueble.objects.filter(activo=True, latitud__isnull=False, longitud__isnull=False)
-            .select_related("tipo_propiedad", "tipo_transaccion", "departamento")
-            .prefetch_related("imagenes")
-            .order_by("-id")
-        )
-
-        features = []
-        for inmueble in inmuebles:
-            imagenes_list = list(inmueble.imagenes.all())
-            features.append(
-                {
-                    "type": "Feature",
-                    "geometry": {
-                        "type": "Point",
-                        "coordinates": [float(inmueble.longitud), float(inmueble.latitud)],
-                    },
-                    "properties": {
-                        "id": inmueble.id,
-                        "titulo": inmueble.titulo,
-                        "precio_usd": str(inmueble.precio_usd),
-                        "precio_bs": str(inmueble.precio_bs),
-                        "ciudad": inmueble.ciudad,
-                        "zona": inmueble.zona,
-                        "calle": inmueble.calle,
-                        "cant_cuartos": inmueble.cant_cuartos,
-                        "cant_banios": inmueble.cant_banios,
-                        "piscina": inmueble.piscina,
-                        "parqueo": inmueble.parqueo,
-                        "permite_mascotas": inmueble.permite_mascotas,
-                        "imagen_principal": imagenes_list[0].url if imagenes_list else None,
-                        "imagenes": [img.url for img in imagenes_list],
-                        "url_propiedad": inmueble.url_propiedad,
-                        "area_construida": str(inmueble.area_construida),
-                        "area_terreno": str(inmueble.area_terreno),
-                        "tipo_propiedad": inmueble.tipo_propiedad.nombre,
-                        "tipo_transaccion": inmueble.tipo_transaccion.nombre,
-                        "departamento": inmueble.departamento.nombre,
-                        "nombre_captador": inmueble.nombre_captador,
-                        "celular_captacion": inmueble.celular_captacion,
-                    },
-                }
+        data = cache.get(MAPA_CACHE_KEY)
+        if data is None:
+            inmuebles = (
+                Inmueble.objects.filter(activo=True, latitud__isnull=False, longitud__isnull=False)
+                .select_related("tipo_propiedad", "tipo_transaccion", "departamento")
+                .prefetch_related("imagenes")
+                .order_by("-id")
             )
 
-        return Response({"type": "FeatureCollection", "features": features})
+            features = []
+            for inmueble in inmuebles:
+                imagenes_list = list(inmueble.imagenes.all())
+                features.append(
+                    {
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": [float(inmueble.longitud), float(inmueble.latitud)],
+                        },
+                        "properties": {
+                            "id": inmueble.id,
+                            "titulo": inmueble.titulo,
+                            "precio_usd": str(inmueble.precio_usd),
+                            "precio_bs": str(inmueble.precio_bs),
+                            "ciudad": inmueble.ciudad,
+                            "zona": inmueble.zona,
+                            "calle": inmueble.calle,
+                            "cant_cuartos": inmueble.cant_cuartos,
+                            "cant_banios": inmueble.cant_banios,
+                            "piscina": inmueble.piscina,
+                            "parqueo": inmueble.parqueo,
+                            "permite_mascotas": inmueble.permite_mascotas,
+                            "imagen_principal": imagenes_list[0].url if imagenes_list else None,
+                            "imagenes": [img.url for img in imagenes_list],
+                            "url_propiedad": inmueble.url_propiedad,
+                            "area_construida": str(inmueble.area_construida),
+                            "area_terreno": str(inmueble.area_terreno),
+                            "tipo_propiedad": inmueble.tipo_propiedad.nombre,
+                            "tipo_transaccion": inmueble.tipo_transaccion.nombre,
+                            "departamento": inmueble.departamento.nombre,
+                            "nombre_captador": inmueble.nombre_captador,
+                            "celular_captacion": inmueble.celular_captacion,
+                        },
+                    }
+                )
+
+            data = {"type": "FeatureCollection", "features": features}
+            cache.set(MAPA_CACHE_KEY, data, MAPA_CACHE_TTL)
+
+        return Response(data)
 
 
 class EtiquetaListCreateAPIView(generics.ListCreateAPIView):

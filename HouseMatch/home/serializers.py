@@ -1,10 +1,22 @@
 from rest_framework import serializers
 
-from .models import Departamento, ImagenInmueble, Inmueble, TipoPropiedad, TipoTransaccion
+from .models import Departamento, Empresa, ImagenInmueble, Inmueble, TipoPropiedad, TipoTransaccion
+
+
+class SlugGetOrCreateField(serializers.SlugRelatedField):
+    def to_internal_value(self, data):
+        try:
+            obj, _ = self.get_queryset().get_or_create(**{self.slug_field: data})
+            return obj
+        except (TypeError, ValueError):
+            self.fail('invalid')
 
 
 class InmuebleCreateSerializer(serializers.ModelSerializer):
-    tipo_propiedad = serializers.SlugRelatedField(
+    empresa = serializers.SlugRelatedField(
+        queryset=Empresa.objects.all(), slug_field='nombre', required=False, allow_null=True
+    )
+    tipo_propiedad = SlugGetOrCreateField(
         queryset=TipoPropiedad.objects.all(), slug_field='nombre'
     )
     tipo_transaccion = serializers.SlugRelatedField(
@@ -24,6 +36,7 @@ class InmuebleCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Inmueble
         fields = [
+            "empresa",
             "tipo_propiedad",
             "tipo_transaccion",
             "departamento",
@@ -73,6 +86,8 @@ class InmuebleCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         imagenes_urls = validated_data.pop("imagenes", [])
+        if validated_data.get("empresa") is None:
+            validated_data["empresa"] = Empresa.objects.filter(nombre__icontains="century").first()
         inmueble = Inmueble.objects.create(**validated_data)
         ImagenInmueble.objects.bulk_create([
             ImagenInmueble(inmueble=inmueble, url=url, orden=i)

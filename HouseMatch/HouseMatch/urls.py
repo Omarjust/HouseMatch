@@ -20,4 +20,6 @@ from django.urls import include, path
 urlpatterns = [
     path('', include('home.urls')),
     path('admin/', admin.site.urls),
+    path('cma/', include('cma.urls')),   # ← AGREGAR
+
 ]

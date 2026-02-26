@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block nav_mapa %}active{% endblock %}
+{% block page_title %}Mapa de Inmuebles{% endblock %}
+{% block title %}CMA · Informe #{{ analisis.pk }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .precio-card {
+    border-radius: 14px;
+    padding: 1.5rem 1rem;
+    text-align: center;
+  }
+  .precio-card .label { font-size: 12px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.05em; color: #6B7280; margin-bottom: 4px; }
+  .precio-card .monto { font-size: 22px; font-weight: 800; }
+  .precio-sugerido { background: linear-gradient(135deg, #1E3A5F, #2E86AB); color: white; }
+  .precio-sugerido .label { color: rgba(255,255,255,0.8); }
+  .precio-sugerido .monto { font-size: 28px; color: white; }
+  .precio-rango { background: #F5F7FA; border: 1px solid #D1D5DB; }
+  .precio-rango .monto { color: #1E3A5F; }
+
+  .comp-card { border: 1px solid #E5E7EB; border-radius: 10px; padding: 1rem; height: 100%; }
+  .comp-card .numero { 
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 50%; color: white;
+    font-weight: 700; font-size: 13px; margin-right: 6px;
+  }
+  .n1 { background: #E67E22; }
+  .n2 { background: #2E86AB; }
+  .n3 { background: #8E44AD; }
+
+  .peso-bar { height: 8px; border-radius: 4px; background: #E5E7EB; margin-top: 6px; }
+  .peso-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #1E3A5F, #2E86AB); }
+
+  .justificacion-box {
+    background: #EFF6FF;
+    border-left: 4px solid #2E86AB;
+    border-radius: 0 10px 10px 0;
+    padding: 1rem 1.25rem;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .consideraciones-box {
+    background: #FFF7ED;
+    border-left: 4px solid #E67E22;
+    border-radius: 0 10px 10px 0;
+    padding: 1rem 1.25rem;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .section-title {
+    font-weight: 700; color: #1E3A5F; font-size: 15px;
+    border-bottom: 2px solid #E5E7EB; padding-bottom: 6px; margin-bottom: 14px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 960px;">
+
+  <!-- Encabezado -->
+  <div class="d-flex align-items-start justify-content-between mb-4">
+    <div>
+      <h4 class="fw-bold text-primary mb-0">
+        <i class="bi bi-graph-up me-2"></i>Informe CMA #{{ analisis.pk }}
+      </h4>
+      <p class="text-muted small mb-0">
+        {{ analisis.obj_titulo }} &nbsp;·&nbsp;
+        Generado el {{ analisis.creado_en|date:"d/m/Y H:i" }}
+      </p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'cma:pdf' analisis.pk %}" class="btn btn-outline-primary">
+        <i class="bi bi-file-pdf me-1"></i> Descargar PDF
+      </a>
+      <a href="{% url 'cma:mapa' %}" class="btn btn-primary">
+        <i class="bi bi-plus me-1"></i> Nuevo análisis
+      </a>
+    </div>
+  </div>
+
+  <!-- ── VALOR ESTIMADO ────────────────────────────────────────────────── -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <div class="section-title">💰 Valor Estimado</div>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <div class="precio-card precio-rango">
+            <div class="label">Precio Mínimo</div>
+            <div class="monto text-warning">${{ analisis.precio_minimo|floatformat:0 }} USD</div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="precio-card precio-sugerido">
+            <div class="label">⭐ Precio Sugerido de Lista</div>
+            <div class="monto">${{ analisis.precio_sugerido|floatformat:0 }} USD</div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="precio-card precio-rango">
+            <div class="label">Precio Máximo</div>
+            <div class="monto text-warning">${{ analisis.precio_maximo|floatformat:0 }} USD</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── JUSTIFICACIÓN ─────────────────────────────────────────────────── -->
+  {% if analisis.justificacion %}
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <div class="section-title"><i class="bi bi-chat-text me-1"></i> Justificación Ejecutiva</div>
+      <div class="justificacion-box">{{ analisis.justificacion }}</div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── COMPARABLES + PONDERACIÓN ────────────────────────────────────── -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <div class="section-title"><i class="bi bi-house-check me-1"></i> Comparables y Ponderación</div>
+      <div class="row g-3">
+        {% for comp, pond, ajuste, pm2 in comparables_data %}
+        <div class="col-md-4">
+          <div class="comp-card">
+            <div class="d-flex align-items-center mb-2">
+              <span class="numero n{{ forloop.counter }}">{{ forloop.counter }}</span>
+              <strong class="small">{{ comp.titulo|truncatechars:30 }}</strong>
+            </div>
+            <div class="text-success fw-bold mb-1">${{ comp.precio_usd|floatformat:0 }} USD</div>
+            <div class="text-muted small mb-1">
+              🛏 {{ comp.cant_cuartos }} &nbsp; 🚿 {{ comp.cant_banios }} &nbsp; 📐 {{ comp.area_construida }} m²
+            </div>
+            {% if pm2 %}
+            <div class="small text-muted mb-2">
+              Precio/m²: <strong>${{ pm2.precio_m2|floatformat:0 }}</strong>
+            </div>
+            {% endif %}
+            {% if pond %}
+            <div class="small fw-semibold text-primary mb-1">Peso: {{ pond.peso_pct }}%</div>
+            <div class="peso-bar">
+              <div class="peso-bar-fill" style="width: {{ pond.peso_pct }}%"></div>
+            </div>
+            <div class="small text-muted mt-2">{{ pond.razon }}</div>
+            {% endif %}
+            {% if ajuste %}
+            <hr class="my-2">
+            <div class="small text-muted"><strong>Ajustes:</strong> {{ ajuste.detalle }}</div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DATOS PROPIEDAD OBJETIVO ──────────────────────────────────────── -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <div class="section-title"><i class="bi bi-house-add me-1"></i> Propiedad Objetivo</div>
+      <div class="row g-2 small">
+        <div class="col-6 col-md-3"><span class="text-muted">Cuartos:</span> <strong>{{ analisis.obj_cant_cuartos }}</strong></div>
+        <div class="col-6 col-md-3"><span class="text-muted">Baños:</span> <strong>{{ analisis.obj_cant_banios }}</strong></div>
+        <div class="col-6 col-md-3"><span class="text-muted">Área const.:</span> <strong>{{ analisis.obj_area_construida }} m²</strong></div>
+        <div class="col-6 col-md-3"><span class="text-muted">Área terreno:</span> <strong>{{ analisis.obj_area_terreno }} m²</strong></div>
+        <div class="col-6 col-md-3"><span class="text-muted">Estacionam.:</span> <strong>{% if analisis.obj_parqueo %}Sí{% else %}No{% endif %}</strong></div>
+        <div class="col-6 col-md-3"><span class="text-muted">Piscina:</span> <strong>{% if analisis.obj_piscina %}Sí{% else %}No{% endif %}</strong></div>
+        <div class="col-6 col-md-3"><span class="text-muted">Antigüedad (1-5):</span> <strong>{{ analisis.obj_antiguedad }}</strong></div>
+        <div class="col-6 col-md-3"><span class="text-muted">Zona:</span> <strong>{{ analisis.obj_zona }} · {{ analisis.obj_ciudad }}</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CONSIDERACIONES ──────────────────────────────────────────────── -->
+  {% if consideraciones %}
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <div class="section-title"><i class="bi bi-exclamation-triangle me-1"></i> Consideraciones para el Agente</div>
+      <div class="consideraciones-box">{{ consideraciones }}</div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Footer -->
+  <p class="text-muted small text-center">
+    Este informe fue generado automáticamente por IA y no reemplaza un avalúo formal.
+  </p>
+
+</div>
+{% endblock %}

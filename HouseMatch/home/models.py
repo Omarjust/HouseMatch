@@ -65,6 +65,7 @@ class Departamento(models.Model):
 
 class Inmueble(models.Model):
     # Relaciones (sin asesor FK)
+    empresa = models.ForeignKey(Empresa, on_delete=models.SET_NULL, null=True, blank=True)
     tipo_propiedad = models.ForeignKey(TipoPropiedad, on_delete=models.PROTECT)
     tipo_transaccion = models.ForeignKey(TipoTransaccion, on_delete=models.PROTECT)
     departamento = models.ForeignKey(Departamento, on_delete=models.PROTECT)

@@ -80,6 +80,7 @@ class InmuebleAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "titulo",
+        "empresa",
         "nombre_captador",
         "tipo_propiedad",
         "tipo_transaccion",
@@ -89,7 +90,7 @@ class InmuebleAdmin(admin.ModelAdmin):
         "ciudad",
         "activo",
     )
-    list_filter = ("activo", "tipo_propiedad", "tipo_transaccion", "departamento", "parqueo", "piscina")
+    list_filter = ("empresa", "activo", "tipo_propiedad", "tipo_transaccion", "departamento", "parqueo", "piscina")
     search_fields = ("titulo", "descripcion", "calle", "zona", "ciudad", "nombre_captador", "celular_captacion")
     autocomplete_fields = ("tipo_propiedad", "tipo_transaccion", "departamento")
 

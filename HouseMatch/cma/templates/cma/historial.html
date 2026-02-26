@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block nav_mapa %}active{% endblock %}
+{% block page_title %}Mapa de Inmuebles{% endblock %}{% block title %}CMA · Historial{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 900px;">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold text-primary mb-0">
+      <i class="bi bi-clock-history me-2"></i>Historial de Análisis CMA
+    </h4>
+    <a href="{% url 'cma:mapa' %}" class="btn btn-primary">
+      <i class="bi bi-plus me-1"></i> Nuevo análisis
+    </a>
+  </div>
+
+  {% if analisis_list %}
+  <div class="row g-3">
+    {% for a in analisis_list %}
+    <div class="col-md-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <span class="badge bg-primary mb-2">#{{ a.pk }}</span>
+            <small class="text-muted">{{ a.creado_en|date:"d/m/Y" }}</small>
+          </div>
+          <h6 class="fw-bold text-primary">{{ a.obj_titulo }}</h6>
+          <div class="text-muted small mb-2">
+            🛏 {{ a.obj_cant_cuartos }} &nbsp; 🚿 {{ a.obj_cant_banios }} &nbsp;
+            📐 {{ a.obj_area_construida }} m² &nbsp; 
+            {% if a.obj_zona %}📍 {{ a.obj_zona }}{% endif %}
+          </div>
+          {% if a.precio_sugerido %}
+          <div class="fw-bold text-success fs-5">${{ a.precio_sugerido|floatformat:0 }} USD</div>
+          <div class="text-muted small">
+            Rango: ${{ a.precio_minimo|floatformat:0 }} — ${{ a.precio_maximo|floatformat:0 }}
+          </div>
+          {% endif %}
+        </div>
+        <div class="card-footer bg-white d-flex gap-2">
+          <a href="{% url 'cma:resultado' a.pk %}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-eye me-1"></i>Ver informe
+          </a>
+          <a href="{% url 'cma:pdf' a.pk %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-file-pdf me-1"></i>PDF
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-5 text-muted">
+    <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+    <p>No tienes análisis CMA aún.</p>
+    <a href="{% url 'cma:mapa' %}" class="btn btn-primary">Crear el primero</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html class="light" lang="es"><head>
 <meta charset="utf-8"/>
@@ -54,23 +55,28 @@
             transition: all 0.3s ease;
         }
         .pro-glow-card {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(224, 247, 255, 0.95) 100%);
-            position: relative;
-            z-index: 1;
-        }
-        .pro-glow-card::after {
-            content: '';
-            position: absolute;
-            inset: -2px;
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            z-index: -1;
-            border-radius: 1.1rem;
-            opacity: 0.6;
-        }
-        .pro-glow-card:hover::after {
-            opacity: 1;
-            box-shadow: 0 0 30px rgba(0, 242, 254, 0.4);
-        }
+  background: #136dec;
+  position: relative;
+  z-index: 1;
+  color: white; /* porque leer azul sobre azul es masoquismo */
+}
+
+.pro-glow-card::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  z-index: -1;
+  border-radius: 1.1rem;
+  opacity: 0.7;
+  filter: blur(8px);
+}
+
+.pro-glow-card:hover::after {
+  opacity: 1;
+  filter: blur(12px);
+  box-shadow: 0 0 40px rgba(0, 242, 254, 0.6);
+}
         .custom-cursor {
             width: 24px;
             height: 24px;
@@ -105,10 +111,7 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 <div class="flex items-center justify-between h-20">
 <div class="flex items-center">
-<a class="flex items-center gap-2 group" href="{% url 'home:index' %}">
-<div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white shadow-md shadow-primary/30">
-<span class="material-icons text-xl">home</span>
-</div>
+<img src="{% static 'home/img/Logo.png' %}" alt="HouseMatch Logo" class="h-8 w-auto">
 <span class="text-xl font-bold tracking-tight text-slate-900 group-hover:text-primary transition-colors">HouseMatch</span>
 </a>
 </div>
@@ -137,34 +140,24 @@
 <main class="flex-1 flex flex-col items-center justify-center py-20 px-6">
 <div class="max-w-[800px] text-center mb-16 space-y-4">
 <h1 class="text-[#111418] text-5xl md:text-6xl font-black leading-tight tracking-[-0.04em] font-display">
-                        Find your perfect home with the <span class="text-primary italic">right plan.</span>
+                        Elige tu plan.<br>Domina tu tiempo.<br><span class="text-primary italic">Multiplica tus cierres.</span>
 </h1>
 <p class="text-[#617289] text-xl font-medium leading-relaxed max-w-2xl mx-auto">
-                        Whether you're starting your search or looking for professional real estate tools, we have a plan for your journey.
+                        Ya sea que estés iniciando en el mundo inmobiliario o quieras herramientas avanzadas de análisis, logística, tenemos el plan que optimiza tu tiempo y potencia tus cierres.
                     </p>
 </div>
-<div class="flex items-center gap-4 mb-16 bg-white p-2 rounded-xl shadow-sm border border-primary/5">
-<span class="text-sm font-bold text-[#617289]">Monthly</span>
-<label class="relative inline-flex items-center cursor-pointer">
-<input checked="" class="sr-only peer" type="checkbox"/>
-<div class="w-14 h-7 bg-primary/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-primary after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary/30"></div>
-</label>
-<div class="flex items-center gap-2">
-<span class="text-sm font-bold text-[#111418]">Yearly</span>
-<span class="bg-green-100 text-green-600 text-[10px] font-black uppercase px-2 py-0.5 rounded-full">Ahorra 20%</span>
-</div>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-[1000px] w-full relative z-10">
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-[1400px] w-full relative z-10">
 <div class="pricing-card-hover flex flex-col gap-8 rounded-2xl border border-solid border-primary/10 bg-white/60 backdrop-blur-sm p-10 shadow-xl shadow-primary/5">
 <div class="flex flex-col gap-4">
 <div class="flex items-center gap-3">
 <span class="material-symbols-outlined text-primary bg-primary/10 p-2 rounded-lg" style="font-variation-settings: 'FILL' 0, 'wght' 400;">home</span>
-<h3 class="text-[#111418] text-xl font-bold leading-tight font-display">Plan inicial</h3>
+<h3 class="text-[#111418] text-xl font-bold leading-tight font-display">Plan Pro</h3>
 </div>
-<p class="text-[#617289] text-sm font-medium">Ideal para quienes buscan su próxima propiedad.</p>
+<p class="text-[#617289] text-sm font-medium">Ideal para dar el primer paso en hacer match estratégico con los requerimientos de tus clientes.</p>
 <div class="flex items-baseline gap-1 mt-4">
 <span class="text-[#111418] text-6xl font-black leading-tight tracking-[-0.04em] font-display">$7</span>
-<span class="text-[#617289] text-lg font-bold">/month</span>
+<span class="text-[#617289] text-lg font-bold">/mes</span>
 </div>
 </div>
 <div class="flex flex-col gap-4 flex-1">
@@ -198,18 +191,18 @@
                             Comenzar ahora
                         </a>
 </div>
-<div class="pricing-card-hover pro-glow-card flex flex-col gap-8 rounded-2xl p-10 shadow-2xl transform scale-105 relative overflow-hidden">
+<div class="pricing-card-hover pro-glow-card flex flex-col gap-8 rounded-2xl p-10 shadow-2xl transform scale-105 relative overflow-hidden bg-[#136dec]">
 <div class="absolute top-0 right-0 popular-badge-glow text-white text-[10px] font-black uppercase px-5 py-2 rounded-bl-2xl">
                             Más popular
                         </div>
 <div class="flex flex-col gap-4">
 <div class="flex items-center gap-3">
 <span class="material-symbols-outlined text-white bg-gradient-to-br from-cyan-vibrant to-electric-blue p-2.5 rounded-xl shadow-lg shadow-cyan-500/30" style="font-variation-settings: 'FILL' 1, 'wght' 600;">domain</span>
-<h3 class="text-white text-xl font-bold leading-tight font-display">Professional Tier</h3>
+<h3 class="text-white text-xl font-bold leading-tight font-display">Plan Hacker</h3>
 </div>
-<p class="text-white text-sm font-medium">Advanced tools for serious investors and buyers.</p>
+<p class="text-white text-sm font-medium">Desarrollado para asesores que quieren respaldar cada match con estructura, logística y argumentos sólidos.</p>
 <div class="flex items-baseline gap-1 mt-4">
-<span class="bg-gradient-to-r from-[#136dec] to-[#00f2fe] bg-clip-text text-transparent text-6xl font-black leading-tight tracking-[-0.04em] font-display">$21</span>
+<span class="bg-gradient-to-r from-[#136dec] to-[#136dec] bg-clip-text text-transparent text-6xl font-black leading-tight tracking-[-0.04em] font-display">$21</span>
 <span class="text-white text-lg font-bold">/Mes</span>
 </div>
 </div>
@@ -219,53 +212,55 @@
                                 Todo lo que incluye el plan básico.
                             </div>
 <div class="flex items-center gap-3 text-sm font-semibold text-white">
-<span class="material-symbols-outlined text-cyan-vibrant text-xl">3d_rotation</span>
+<span class="material-symbols-outlined text-[#0e499c] text-xl" style="font-variation-settings: 'FILL' 1;">3d_rotation</span>
                                 Alertas personalizadas de tus requerimientos específicos antes que los demás usuarios
                             </div>
 <div class="flex items-center gap-3 text-sm font-semibold text-white">
-<span class="material-symbols-outlined text-cyan-vibrant text-xl">support_agent</span>
+<span class="material-symbols-outlined text-[#0e499c] text-xl" style="font-variation-settings: 'FILL' 1;">support_agent</span>
                                 Buscador con IA (Encuentra tu requerimiento con Inteligencia Artificial en segundos)
                             </div>
 <div class="flex items-center gap-3 text-sm font-semibold text-white">
-<span class="material-symbols-outlined text-cyan-vibrant text-xl">psychology</span>
+<span class="material-symbols-outlined text-[#0e499c] text-xl" style="font-variation-settings: 'FILL' 1;" >psychology</span>
                                 Acceso al Rango del valor Referencial del M2 por zona en menos de 10 segundos
                             </div>
 <div class="flex items-center gap-3 text-sm font-semibold text-white">
-<span class="material-symbols-outlined text-cyan-vibrant text-xl">all_inclusive</span>
+<span class="material-symbols-outlined text-[#0e499c] text-xl" style="font-variation-settings: 'FILL' 1;">all_inclusive</span>
                                 Formulación automatizada de tu AMC (análisis de mercado comparativo) en 3 simples pasos
                             </div>
 <div class="flex items-center gap-3 text-sm font-semibold text-white">
-<span class="material-symbols-outlined text-cyan-vibrant text-xl">check_circle</span>
+<span class="material-symbols-outlined text-[#0e499c] text-xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
                                 Documento pdf listo de tu AMC para descargar y enviar a tu cliente
                             </div>
 <div class="flex items-center gap-3 text-sm font-semibold text-white">
-<span class="material-symbols-outlined text-cyan-vibrant text-xl">check_circle</span>
+<span class="material-symbols-outlined text-[#0e499c] text-xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
                                 Etiquetas infinitas para tus inmuebles favoritos
                             </div>
 <div class="flex items-center gap-3 text-sm font-semibold text-white">
-<span class="material-symbols-outlined text-cyan-vibrant text-xl">check_circle</span>
+<span class="material-symbols-outlined text-[#0e499c] text-xl">check_circle</span>
                                 Ficha técnica de los inmuebles en pdf para enviar a tu cliente
                             </div>
 <div class="flex items-center gap-3 text-sm font-semibold text-white">
-<span class="material-symbols-outlined text-cyan-vibrant text-xl">check_circle</span>
-                                Comunidad exclusiva de los usuarios pro
+<span class="material-symbols-outlined text-[#0e499c] text-xl">check_circle</span>
+                                Comunidad exclusiva de los ucuanto suarios pro
                             </div>
 </div>
-<a href="{% url 'home:registro' %}" class="w-full flex cursor-pointer items-center justify-center rounded-xl h-14 bg-gradient-to-r from-cyan-vibrant to-electric-blue text-white text-base font-black leading-normal tracking-[0.02em] hover:brightness-110 transition-all shadow-xl shadow-cyan-400/30">
-                            Obtener Plan Pro
+<a href="{% url 'home:registro' %}"
+   class="w-full flex cursor-pointer items-center justify-center rounded-xl h-14 
+          bg-[#136dec] text-white text-base font-black leading-normal tracking-[0.02em] 
+          hover:brightness-110 transition-all shadow-xl shadow-blue-500/30">                            Obtener Plan Pro
                         </a>
 </div>
 </div>
 <div class="mt-24 flex flex-col items-center gap-8 w-full max-w-[1000px]">
 <div class="flex flex-wrap justify-center gap-12 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
 <div class="flex items-center gap-2 font-display font-bold text-xl">
-<span class="material-symbols-outlined">security</span> SECURE PAY
+<span class="material-symbols-outlined">security</span> PAGO SEGURO
                         </div>
 <div class="flex items-center gap-2 font-display font-bold text-xl">
-<span class="material-symbols-outlined">verified_user</span> TRUSTED
+<span class="material-symbols-outlined">verified_user</span> CONFIABLE
                         </div>
 <div class="flex items-center gap-2 font-display font-bold text-xl">
-<span class="material-symbols-outlined">history</span> 24/7 SUPPORT
+<span class="material-symbols-outlined">history</span> SOPORTE 24/7
                         </div>
 </div>
 <div class="text-center space-y-2">
@@ -279,11 +274,8 @@
 <footer class="bg-white border-t border-primary/5 py-12 px-10">
 <div class="max-w-[1200px] mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
 <div class="flex items-center gap-2 text-[#111418]">
-<div class="size-6 text-primary">
-<svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-<path d="M13.8261 30.5736C16.7203 29.8826 20.2244 29.4783 24 29.4783C27.7756 29.4783 31.2797 29.8826 34.1739 30.5736C36.9144 31.2278 39.9967 32.7669 41.3563 33.8352L24.8486 7.36089C24.4571 6.73303 23.5429 6.73303 23.1514 7.36089L6.64374 33.8352C8.00331 32.7669 11.0856 31.2278 13.8261 30.5736Z" fill="currentColor"></path>
-</svg>
-</div>
+<img src="{% static 'home/img/Logo.png' %}" alt="HouseMatch Logo" class="h-8 w-auto">
+
 <span class="font-black text-lg tracking-tight">HouseMatch</span>
 </div>
 <div class="flex gap-8 text-[#617289] text-xs font-bold uppercase tracking-widest">

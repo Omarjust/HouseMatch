@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+{% block nav_mapa %}active{% endblock %}
+{% block page_title %}Mapa de Inmuebles{% endblock %}{% block title %}CMA · Seleccionar Comparables{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+  #mapa { height: 70vh; border-radius: 12px; border: 2px solid #2E86AB; }
+
+  .panel-lateral {
+    background: #F5F7FA;
+    border-radius: 12px;
+    padding: 1.25rem;
+    height: 70vh;
+    overflow-y: auto;
+  }
+
+  .comp-slot {
+    background: white;
+    border: 2px dashed #D1D5DB;
+    border-radius: 10px;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    min-height: 80px;
+    transition: border-color 0.2s;
+  }
+  .comp-slot.filled {
+    border-color: #27AE60;
+    border-style: solid;
+  }
+  .comp-slot .slot-num {
+    font-size: 11px;
+    font-weight: 700;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .comp-slot .slot-titulo {
+    font-weight: 600;
+    color: #1E3A5F;
+    font-size: 14px;
+    margin: 2px 0;
+  }
+  .comp-slot .slot-precio {
+    color: #27AE60;
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .comp-slot .btn-quitar {
+    font-size: 11px;
+    padding: 1px 6px;
+  }
+
+  /* Popup personalizado */
+  .popup-content { font-family: Arial, sans-serif; min-width: 220px; }
+  .popup-titulo { font-weight: 700; color: #1E3A5F; font-size: 14px; margin-bottom: 4px; }
+  .popup-precio { color: #27AE60; font-weight: 700; font-size: 15px; margin-bottom: 8px; }
+  .popup-datos { font-size: 12px; color: #374151; margin-bottom: 8px; }
+  .popup-datos span { display: inline-block; margin-right: 8px; }
+  .btn-seleccionar { width: 100%; font-size: 13px; }
+
+  .badge-num { 
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 50%; 
+    font-size: 12px; font-weight: 700; color: white; margin-right: 6px;
+  }
+  .badge-1 { background: #E67E22; }
+  .badge-2 { background: #2E86AB; }
+  .badge-3 { background: #8E44AD; }
+
+  #btn-siguiente { transition: all 0.2s; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-4">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <h4 class="mb-0 fw-bold text-primary">
+        <i class="bi bi-map me-2"></i>Paso 1 — Seleccionar Comparables
+      </h4>
+      <p class="text-muted small mb-0">Haz clic en 3 propiedades del mapa para usarlas como comparables.</p>
+    </div>
+    <div class="d-flex gap-2 align-items-center">
+      <span class="badge bg-secondary" id="contador-badge">0 / 3 seleccionadas</span>
+      <a id="btn-siguiente" href="#" class="btn btn-success disabled">
+        Siguiente <i class="bi bi-arrow-right ms-1"></i>
+      </a>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <!-- Mapa -->
+    <div class="col-lg-9">
+      <div id="mapa"></div>
+    </div>
+
+    <!-- Panel lateral -->
+    <div class="col-lg-3">
+      <div class="panel-lateral">
+        <h6 class="fw-bold text-primary mb-3">
+          <i class="bi bi-house-check me-1"></i>Comparables seleccionadas
+        </h6>
+
+        {% for i in "123" %}
+        <div class="comp-slot" id="slot-{{ i }}">
+          <div class="slot-num">
+            <span class="badge-num badge-{{ i }}">{{ i }}</span> Comparable {{ i }}
+          </div>
+          <div class="slot-body text-muted small mt-1">Sin seleccionar</div>
+        </div>
+        {% endfor %}
+
+        <hr>
+        <div class="mb-2">
+          <small class="text-muted">
+            <i class="bi bi-info-circle me-1"></i>
+            Los inmuebles seleccionados deben tener características similares a la propiedad que deseas valuar.
+          </small>
+        </div>
+
+        <button class="btn btn-outline-danger btn-sm w-100 mt-1" onclick="limpiarSeleccion()">
+          <i class="bi bi-trash me-1"></i>Limpiar selección
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  // ── Estado ──────────────────────────────────────────────────────────────
+  const seleccionados = {};   // { 1: {id, titulo, precio}, 2: ..., 3: ... }
+  const markersMap = {};      // { inmueble_id: marker }
+
+  // ── Mapa ────────────────────────────────────────────────────────────────
+  const map = L.map('mapa').setView([-16.5, -68.15], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  // Iconos de colores
+  const colores = ['#E67E22', '#2E86AB', '#8E44AD'];
+  function iconoPara(slot) {
+    const c = colores[slot - 1] || '#555';
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="24" height="36">
+      <path fill="${c}" d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24C24 5.4 18.6 0 12 0z"/>
+      <circle fill="white" cx="12" cy="12" r="5"/>
+      <text fill="${c}" x="12" y="16" text-anchor="middle" font-size="8" font-weight="bold">${slot}</text>
+    </svg>`;
+    return L.divIcon({ html: svg, iconSize: [24, 36], iconAnchor: [12, 36], popupAnchor: [0, -36], className: '' });
+  }
+  const iconoDefault = L.divIcon({
+    html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="20" height="30">
+      <path fill="#6B7280" d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24C24 5.4 18.6 0 12 0z"/>
+      <circle fill="white" cx="12" cy="12" r="4"/>
+    </svg>`,
+    iconSize: [20, 30], iconAnchor: [10, 30], popupAnchor: [0, -30], className: ''
+  });
+
+  // ── Cargar GeoJSON ───────────────────────────────────────────────────────
+  fetch("{% url 'cma:api_geojson' %}")
+    .then(r => r.json())
+    .then(data => {
+      data.features.forEach(f => {
+        const p = f.properties;
+        const [lng, lat] = f.geometry.coordinates;
+        const marker = L.marker([lat, lng], { icon: iconoDefault });
+        marker.inmuebleId = p.id;
+        marker.inmuebleData = p;
+
+        const popupHtml = `
+          <div class="popup-content">
+            ${p.imagen ? `<img src="${p.imagen}" style="width:100%;height:100px;object-fit:cover;border-radius:6px;margin-bottom:8px">` : ''}
+            <div class="popup-titulo">${p.titulo}</div>
+            <div class="popup-precio">$${p.precio_usd.toLocaleString()} USD</div>
+            <div class="popup-datos">
+              <span>🛏 ${p.cant_cuartos}</span>
+              <span>🚿 ${p.cant_banios}</span>
+              <span>📐 ${p.area_construida} m²</span>
+              ${p.parqueo ? '<span>🚗 Parqueo</span>' : ''}
+              ${p.piscina ? '<span>🏊 Piscina</span>' : ''}
+            </div>
+            <div class="popup-datos text-muted">${p.zona}, ${p.ciudad}</div>
+            <button class="btn btn-primary btn-sm btn-seleccionar" onclick="seleccionar(${p.id})">
+              + Agregar como comparable
+            </button>
+          </div>`;
+
+        marker.bindPopup(popupHtml, { maxWidth: 260 });
+        marker.addTo(map);
+        markersMap[p.id] = marker;
+      });
+    });
+
+  // ── Lógica de selección ─────────────────────────────────────────────────
+  function seleccionar(inmuebleId) {
+    // Si ya está seleccionado, no hacer nada
+    for (let s = 1; s <= 3; s++) {
+      if (seleccionados[s] && seleccionados[s].id === inmuebleId) {
+        alert('Esta propiedad ya fue seleccionada.');
+        return;
+      }
+    }
+
+    // Buscar slot libre
+    let slotLibre = null;
+    for (let s = 1; s <= 3; s++) {
+      if (!seleccionados[s]) { slotLibre = s; break; }
+    }
+
+    if (!slotLibre) {
+      alert('Ya tienes 3 comparables seleccionadas. Quita una para agregar otra.');
+      return;
+    }
+
+    const marker = markersMap[inmuebleId];
+    const data = marker.inmuebleData;
+    seleccionados[slotLibre] = { id: inmuebleId, titulo: data.titulo, precio: data.precio_usd };
+    marker.setIcon(iconoPara(slotLibre));
+    marker.closePopup();
+
+    actualizarPanel();
+  }
+
+  function quitarSlot(slot) {
+    const prev = seleccionados[slot];
+    if (prev && markersMap[prev.id]) {
+      markersMap[prev.id].setIcon(iconoDefault);
+    }
+    delete seleccionados[slot];
+    actualizarPanel();
+  }
+
+  function limpiarSeleccion() {
+    for (let s = 1; s <= 3; s++) quitarSlot(s);
+  }
+
+  function actualizarPanel() {
+    const total = Object.keys(seleccionados).length;
+    document.getElementById('contador-badge').textContent = `${total} / 3 seleccionadas`;
+
+    for (let s = 1; s <= 3; s++) {
+      const slot = document.getElementById(`slot-${s}`);
+      const body = slot.querySelector('.slot-body');
+      if (seleccionados[s]) {
+        const d = seleccionados[s];
+        slot.classList.add('filled');
+        body.innerHTML = `
+          <div class="slot-titulo">${d.titulo.substring(0, 35)}</div>
+          <div class="slot-precio">$${d.precio.toLocaleString()} USD</div>
+          <button class="btn btn-outline-danger btn-quitar mt-1" onclick="quitarSlot(${s})">
+            <i class="bi bi-x"></i> Quitar
+          </button>`;
+      } else {
+        slot.classList.remove('filled');
+        body.innerHTML = '<span class="text-muted small">Sin seleccionar</span>';
+      }
+    }
+
+    const btnSig = document.getElementById('btn-siguiente');
+    if (total === 3) {
+      const url = `{% url 'cma:formulario' %}?c1=${seleccionados[1].id}&c2=${seleccionados[2].id}&c3=${seleccionados[3].id}`;
+      btnSig.href = url;
+      btnSig.classList.remove('disabled');
+    } else {
+      btnSig.href = '#';
+      btnSig.classList.add('disabled');
+    }
+  }
+</script>
+{% endblock %}

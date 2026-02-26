@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -133,15 +134,14 @@
 <nav class="bg-white border-b border-slate-100 z-50 flex-shrink-0 shadow-sm">
     <div class="max-w-[1920px] mx-auto px-4 lg:px-6 h-16 flex items-center justify-between">
         <a href="{% url 'home:index' %}" class="flex items-center gap-2 group">
-            <div class="w-9 h-9 rounded-xl bg-[#136dec] flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
-                <span class="material-icons text-xl">home</span>
-            </div>
+            <img src="{% static 'home/img/Logo.png' %}" alt="HouseMatch Logo" class="h-8 w-auto">
             <span class="text-xl font-extrabold tracking-tight text-slate-900">HouseMatch</span>
         </a>
 
         <div class="flex items-center gap-4">
             {% if user.is_authenticated %}
-            <a href="{% url 'home:etiquetas' %}"
+            <a id="nav-heart-link"
+               href="{% url 'home:etiquetas' %}"
                title="Mis etiquetas guardadas"
                class="flex items-center justify-center hover:scale-110 transition-transform"
                style="color:#e11d48;line-height:1">
@@ -218,6 +218,11 @@
                         class="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 rounded-xl text-slate-700 font-bold text-sm hover:border-[#136dec] hover:text-[#136dec] transition-all">
                     <span class="material-symbols-outlined text-lg">tune</span>
                     Filtros
+                </button>
+                <button id="btn-radio" onclick="toggleRadiusMode()"
+                        class="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 rounded-xl text-slate-700 font-bold text-sm hover:border-[#136dec] hover:text-[#136dec] transition-all">
+                    <span class="material-symbols-outlined text-lg">my_location</span>
+                    Radio
                 </button>
                 <button onclick="applyFilters()"
                         class="flex items-center gap-1.5 px-5 py-2 bg-[#136dec] text-white font-bold text-sm rounded-xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all">
@@ -303,6 +308,40 @@
       </div>
     </div>
 
+    <!-- Radius panel -->
+    <div id="radius-panel" style="display:none"
+         class="absolute bottom-24 left-1/2 -translate-x-1/2 z-[500] glass-panel rounded-2xl shadow-2xl px-5 py-4
+                flex flex-col items-center gap-3 min-w-[260px]">
+
+        <!-- State A: no center placed yet -->
+        <div id="radius-hint" class="flex items-center gap-2 text-sm font-semibold text-slate-600">
+            <span class="material-symbols-outlined text-[#136dec]">ads_click</span>
+            Haz clic en el mapa para colocar el centro
+        </div>
+
+        <!-- State B: center placed -->
+        <div id="radius-controls" style="display:none" class="flex flex-col items-center gap-3 w-full">
+            <div class="flex items-center justify-between w-full">
+                <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Radio</span>
+                <span id="radius-label" class="text-sm font-black text-[#136dec]">2.0 km</span>
+            </div>
+            <input id="radius-slider" type="range" min="500" max="20000" step="100" value="2000"
+                   class="w-full accent-[#136dec]" oninput="onRadiusSlide(this.value)"/>
+            <div class="flex gap-2 w-full">
+                <button onclick="applyFilters()"
+                        class="flex-1 py-2 bg-[#136dec] text-white font-bold text-sm rounded-xl
+                               shadow-lg shadow-blue-500/20 hover:bg-blue-600 transition-colors">
+                    Buscar aquí
+                </button>
+                <button onclick="exitRadiusMode()"
+                        class="px-4 py-2 border border-slate-200 text-slate-600 font-bold text-sm
+                               rounded-xl hover:border-slate-400 transition-colors">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Zoom controls -->
     <div class="absolute bottom-10 left-10 flex flex-col gap-3 z-[400]">
         <button onclick="mapInst.zoomIn()"
@@ -341,12 +380,25 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>'
 }).addTo(mapInst);
 
+// ── Radius mode: handle map clicks ────────────────────────────
+mapInst.on('click', function(e) {
+    if (!radiusMode) return;
+    placeRadiusCenter(e.latlng);
+});
+
 // ── State ─────────────────────────────────────────────────────
 let allFeatures  = [];
 let activeLayer  = null;
 let minRooms     = 0;
 let minBaths     = 0;
 const amenState  = { piscina: false, parqueo: false, mascotas: false };
+
+// ── Radius mode state ─────────────────────────────────────────
+let radiusMode   = false;
+let radiusCenter = null;   // L.LatLng
+let radiusMeters = 2000;   // default 2 km
+let radiusCircle = null;   // L.Circle
+let radiusMarker = null;   // L.Marker draggable
 
 // ── Marker icon ───────────────────────────────────────────────
 const ICON_MAP = { 'Casa': 'house', 'Dpto': 'apartment', 'Quinta': 'nature_people' };
@@ -469,11 +521,15 @@ function applyFilters() {
     const wVen     = document.getElementById('tt-venta').checked;
     const wAnti    = document.getElementById('tt-anticretico').checked;
 
-    const filtered = allFeatures.filter(f => {
+    let filtered = allFeatures.filter(f => {
         const p    = f.properties;
-        const text = `${p.titulo} ${p.zona} ${p.ciudad} ${p.calle}`.toLowerCase();
-        const words = q.split(/\s+/).filter(Boolean);
-        if (words.length > 0 && !words.every(w => text.includes(w))) return false;
+
+        // Text search — skip when radius mode is active
+        if (!radiusMode) {
+            const text = `${p.titulo} ${p.zona} ${p.ciudad} ${p.calle}`.toLowerCase();
+            const words = q.split(/\s+/).filter(Boolean);
+            if (words.length > 0 && !words.every(w => text.includes(w))) return false;
+        }
 
         const price = parseFloat(p.precio_usd);
         if (price < minP || price > maxP) return false;
@@ -493,7 +549,83 @@ function applyFilters() {
         return true;
     });
 
+    // Radius filter
+    if (radiusMode && radiusCenter) {
+        filtered = filtered.filter(f => {
+            const ll = L.latLng(
+                f.geometry.coordinates[1],
+                f.geometry.coordinates[0]
+            );
+            return radiusCenter.distanceTo(ll) <= radiusMeters;
+        });
+    }
+
     render(filtered);
+}
+
+// ── Radius mode functions ─────────────────────────────────────
+function toggleRadiusMode() {
+    radiusMode ? exitRadiusMode() : enterRadiusMode();
+}
+
+function enterRadiusMode() {
+    radiusMode = true;
+    mapInst.getContainer().style.cursor = 'crosshair';
+    document.getElementById('radius-panel').style.display = 'flex';
+    document.getElementById('radius-hint').style.display = 'flex';
+    document.getElementById('radius-controls').style.display = 'none';
+    document.getElementById('btn-radio').classList.add('bg-[#136dec]', 'text-white', 'border-[#136dec]');
+}
+
+function exitRadiusMode() {
+    radiusMode = false;
+    radiusCenter = null;
+    mapInst.getContainer().style.cursor = '';
+    document.getElementById('radius-panel').style.display = 'none';
+    if (radiusCircle) { mapInst.removeLayer(radiusCircle); radiusCircle = null; }
+    if (radiusMarker) { mapInst.removeLayer(radiusMarker); radiusMarker = null; }
+    document.getElementById('btn-radio').classList.remove('bg-[#136dec]', 'text-white', 'border-[#136dec]');
+}
+
+function placeRadiusCenter(latlng) {
+    radiusCenter = latlng;
+
+    if (radiusCircle) mapInst.removeLayer(radiusCircle);
+    if (radiusMarker) mapInst.removeLayer(radiusMarker);
+
+    radiusCircle = L.circle(latlng, {
+        radius: radiusMeters,
+        color: '#136dec', weight: 2, dashArray: '6 4',
+        fillColor: '#136dec', fillOpacity: 0.12,
+    }).addTo(mapInst);
+
+    radiusMarker = L.marker(latlng, {
+        draggable: true,
+        icon: L.divIcon({
+            html: `<div style="width:18px;height:18px;background:#136dec;border:3px solid white;
+                               border-radius:50%;box-shadow:0 2px 8px rgba(19,109,236,0.5)"></div>`,
+            className: '', iconSize: [18,18], iconAnchor: [9,9],
+        })
+    }).addTo(mapInst);
+
+    radiusMarker.on('drag', function(e) {
+        radiusCenter = e.latlng;
+        radiusCircle.setLatLng(e.latlng);
+    });
+    radiusMarker.on('dragend', applyFilters);
+
+    document.getElementById('radius-hint').style.display = 'none';
+    document.getElementById('radius-controls').style.display = 'flex';
+}
+
+function onRadiusSlide(val) {
+    radiusMeters = Number(val);
+    const label = radiusMeters >= 1000
+        ? (radiusMeters / 1000).toFixed(1) + ' km'
+        : radiusMeters + ' m';
+    document.getElementById('radius-label').textContent = label;
+    if (radiusCircle) radiusCircle.setRadius(radiusMeters);
+    applyFilters();
 }
 
 // ── Data fetch ────────────────────────────────────────────────
@@ -534,6 +666,175 @@ function toggleAmenity(name) {
 
 function centerBolivia() {
     mapInst.setView(SANTA_CRUZ, 12);
+}
+
+// ── Match sound (Web Audio API, sin archivos externos) ────────
+let _journeyPlayed = false; // guard: evita doble reproducción en crearYGuardar
+
+function playJourneySound() {
+    if (_journeyPlayed) return;
+    _journeyPlayed = true;
+
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const t = ctx.currentTime;
+
+    // Sweep de triángulo cálido (suave, amigable — no sawtooth ni ruido)
+    const sweep = ctx.createOscillator();
+    const swGain = ctx.createGain();
+    sweep.type = 'triangle';
+    sweep.frequency.setValueAtTime(260, t);
+    sweep.frequency.exponentialRampToValueAtTime(1300, t + 1.2);
+    swGain.gain.setValueAtTime(0, t);
+    swGain.gain.linearRampToValueAtTime(0.10, t + 0.06);
+    swGain.gain.linearRampToValueAtTime(0.07, t + 0.95);
+    swGain.gain.linearRampToValueAtTime(0, t + 1.2);
+    sweep.connect(swGain);
+    swGain.connect(ctx.destination);
+    sweep.start(t);
+    sweep.stop(t + 1.2);
+
+    // Campanitas en arpeggio (C5 → E5 → G5) — sensación mágica de vuelo
+    [[0.12, 523.25, 0.28], [0.48, 659.25, 0.30], [0.84, 783.99, 0.32]].forEach(([delay, freq, vol]) => {
+        const bell = ctx.createOscillator();
+        const bg = ctx.createGain();
+        bell.type = 'sine';
+        bell.frequency.setValueAtTime(freq, t + delay);
+        bg.gain.setValueAtTime(0, t + delay);
+        bg.gain.linearRampToValueAtTime(vol, t + delay + 0.014);
+        bg.gain.exponentialRampToValueAtTime(0.001, t + delay + 0.48);
+        bell.connect(bg);
+        bg.connect(ctx.destination);
+        bell.start(t + delay);
+        bell.stop(t + delay + 0.52);
+    });
+
+    setTimeout(() => {
+        _journeyPlayed = false;
+        ctx.close();
+    }, 1800);
+}
+
+function playExplosionSound() {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const t = ctx.currentTime;
+
+    // 1) Bass thump (golpe bajo explosivo)
+    const imp = ctx.createOscillator();
+    const impG = ctx.createGain();
+    imp.type = 'sine';
+    imp.frequency.setValueAtTime(230, t);
+    imp.frequency.exponentialRampToValueAtTime(32, t + 0.18);
+    impG.gain.setValueAtTime(0, t);
+    impG.gain.linearRampToValueAtTime(1.1, t + 0.007);
+    impG.gain.exponentialRampToValueAtTime(0.001, t + 0.40);
+    imp.connect(impG);
+    impG.connect(ctx.destination);
+    imp.start(t);
+    imp.stop(t + 0.40);
+
+    // 2) Noise burst (estallido)
+    const eLen = Math.ceil(ctx.sampleRate * 0.45);
+    const eBuf = ctx.createBuffer(1, eLen, ctx.sampleRate);
+    const eData = eBuf.getChannelData(0);
+    for (let i = 0; i < eLen; i++) eData[i] = Math.random() * 2 - 1;
+    const eNode = ctx.createBufferSource();
+    eNode.buffer = eBuf;
+    const eFilter = ctx.createBiquadFilter();
+    eFilter.type = 'lowpass';
+    eFilter.frequency.setValueAtTime(5000, t);
+    eFilter.frequency.exponentialRampToValueAtTime(280, t + 0.38);
+    const eGain = ctx.createGain();
+    eGain.gain.setValueAtTime(0.80, t);
+    eGain.gain.exponentialRampToValueAtTime(0.001, t + 0.40);
+    eNode.connect(eFilter);
+    eFilter.connect(eGain);
+    eGain.connect(ctx.destination);
+    eNode.start(t);
+    eNode.stop(t + 0.45);
+
+    // 3) Sparkles escalonados (A5 → E6 → A6)
+    [[0.02, 880, 0.52], [0.07, 1320, 0.46], [0.13, 1760, 0.36]].forEach(([delay, freq, vol]) => {
+        const sp = ctx.createOscillator();
+        const sg = ctx.createGain();
+        sp.type = 'sine';
+        sp.frequency.setValueAtTime(freq, t + delay);
+        sg.gain.setValueAtTime(vol, t + delay);
+        sg.gain.exponentialRampToValueAtTime(0.001, t + delay + 0.72);
+        sp.connect(sg);
+        sg.connect(ctx.destination);
+        sp.start(t + delay);
+        sp.stop(t + delay + 0.75);
+    });
+
+    setTimeout(() => ctx.close(), 1800);
+}
+
+// ── Flying heart animation ────────────────────────────────────
+function flyHeartToNav() {
+    const navHeart = document.getElementById('nav-heart-link');
+    if (!navHeart) return;
+
+    // Origin: centro del card del modal
+    const modalCard = document.querySelector('#heart-modal > div');
+    if (!modalCard) return;
+    const fromRect = modalCard.getBoundingClientRect();
+    const fromX = fromRect.left + fromRect.width  / 2;
+    const fromY = fromRect.top  + fromRect.height / 2;
+
+    // Destination: centro del ícono de corazón en el navbar
+    const toRect = navHeart.getBoundingClientRect();
+    const toX = toRect.left + toRect.width  / 2;
+    const toY = toRect.top  + toRect.height / 2;
+
+    // Crear partícula voladora
+    const el = document.createElement('div');
+    el.style.cssText = `
+        position:fixed;
+        left:${fromX}px;
+        top:${fromY}px;
+        transform:translate(-50%,-50%);
+        pointer-events:none;
+        z-index:10000;
+        font-size:28px;
+        line-height:1;
+        filter:drop-shadow(0 0 8px rgba(225,29,72,0.7));
+        will-change:transform,opacity;
+    `;
+    el.textContent = '❤️';
+    document.body.appendChild(el);
+
+    // Punto de arco (curva hacia arriba y a la derecha/izquierda)
+    const midX = (fromX + toX) / 2 + (toX - fromX) * 0.15;
+    const midY = Math.min(fromY, toY) - 80;  // arco hacia arriba
+
+    // Animación con Web Animations API (arco en 3 keyframes)
+    const dx1 = midX - fromX;
+    const dy1 = midY - fromY;
+    const dx2 = toX  - fromX;
+    const dy2 = toY  - fromY;
+
+    const anim = el.animate([
+        { transform: `translate(-50%,-50%) scale(1)`,    opacity: 1   },
+        { transform: `translate(calc(-50% + ${dx1}px), calc(-50% + ${dy1}px)) scale(1.35)`, opacity: 1, offset: 0.45 },
+        { transform: `translate(calc(-50% + ${dx2}px), calc(-50% + ${dy2}px)) scale(0.25)`, opacity: 0.85 },
+    ], {
+        duration: 1100,
+        easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+        fill: 'forwards',
+    });
+
+    // Al llegar: bounce en el ícono del navbar + limpiar
+    anim.onfinish = () => {
+        el.remove();
+        navHeart.animate([
+            { transform: 'scale(1)'    },
+            { transform: 'scale(2.4)', offset: 0.22 },
+            { transform: 'scale(0.65)', offset: 0.48 },
+            { transform: 'scale(1.6)', offset: 0.68 },
+            { transform: 'scale(0.88)', offset: 0.85 },
+            { transform: 'scale(1)'    },
+        ], { duration: 520, easing: 'ease-out' });
+    };
 }
 
 // ── Heart modal ───────────────────────────────────────────────
@@ -597,6 +898,7 @@ function renderEtiquetas(etiquetas) {
 }
 
 async function guardarEnEtiqueta(etiquetaId) {
+    playJourneySound();                              // ← inicia al instante del clic
     const feedback = document.getElementById('heart-feedback');
     try {
         const res = await fetch(`/api/etiquetas/${etiquetaId}/guardados/`, {
@@ -609,6 +911,8 @@ async function guardarEnEtiqueta(etiquetaId) {
         });
         const data = await res.json();
         if (res.status === 201) {
+            flyHeartToNav();                         // ← animación
+            playExplosionSound();                    // ← sonido de impacto
             feedback.textContent = '¡Guardado correctamente!';
             feedback.style.color = '#16a34a';
             setTimeout(closeHeartModal, 1200);
@@ -624,6 +928,7 @@ async function guardarEnEtiqueta(etiquetaId) {
 }
 
 async function crearYGuardar() {
+    playJourneySound();                              // ← inicia al instante del clic
     const input = document.getElementById('new-etiqueta-input');
     const nombre = input.value.trim();
     const feedback = document.getElementById('heart-feedback');
