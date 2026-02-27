@@ -34,14 +34,20 @@ class InmuebleCreateAPIView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save()
-        cache.delete(MAPA_CACHE_KEY)
+        try:
+            cache.delete(MAPA_CACHE_KEY)
+        except Exception:
+            pass
 
 
 class InmuebleMapGeoJSONAPIView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        data = cache.get(MAPA_CACHE_KEY)
+        try:
+            data = cache.get(MAPA_CACHE_KEY)
+        except Exception:
+            data = None
         if data is None:
             inmuebles = (
                 Inmueble.objects.filter(activo=True, latitud__isnull=False, longitud__isnull=False)
@@ -88,7 +94,10 @@ class InmuebleMapGeoJSONAPIView(APIView):
                 )
 
             data = {"type": "FeatureCollection", "features": features}
-            cache.set(MAPA_CACHE_KEY, data, MAPA_CACHE_TTL)
+            try:
+                cache.set(MAPA_CACHE_KEY, data, MAPA_CACHE_TTL)
+            except Exception:
+                pass
 
         return Response(data)
 

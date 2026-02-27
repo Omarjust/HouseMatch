@@ -7,8 +7,7 @@
 <title>HouseMatch | ACM</title>
 
 <!-- Leaflet -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
 
@@ -387,8 +386,7 @@
 </div>
 
 <!-- Scripts -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/WPc=" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
 <script>
@@ -403,10 +401,9 @@ const mapInst = L.map('map', {
     zoomControl: true,
 });
 
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    subdomains: 'abcd',
-    maxZoom: 19
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>',
+    maxZoom: 19,
 }).addTo(mapInst);
 
 const clusterGroup = L.markerClusterGroup({ maxClusterRadius: 50 });
@@ -469,8 +466,8 @@ fetch('/api/inmuebles/mapa/')
             marker.on('click', () => toggleComparable(feature, marker));
 
             marker.bindPopup(() => {
-                const img = p.foto_principal
-                    ? `<img src="${p.foto_principal}" class="w-full h-28 object-cover" />`
+                const img = p.imagen_principal
+                    ? `<img src="${p.imagen_principal}" class="w-full h-28 object-cover" />`
                     : `<div class="w-full h-16 bg-slate-100 flex items-center justify-center text-slate-300"><span class="material-icons text-3xl">home</span></div>`;
                 const precio = p.precio_usd ? `$${Number(p.precio_usd).toLocaleString()} USD` : 'Precio no especificado';
                 return `<div>
@@ -490,6 +487,9 @@ fetch('/api/inmuebles/mapa/')
         });
 
         setTimeout(() => mapInst.invalidateSize(), 50);
+        if (features.length > 0 && clusterGroup.getLayers().length > 0) {
+            mapInst.fitBounds(clusterGroup.getBounds().pad(0.08));
+        }
 
         if (features.length === 0) {
             hintEl.innerHTML = `<span class="material-icons text-amber-500 text-sm align-middle mr-1">warning</span>

@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -23,9 +24,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-67**6%d-j&)-*fmrx+waemf^^5m*xd-y49f=@!@)6p*(*9ro&4'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.0.40','localhost', '127.0.0.1','housematch.onrender.com','dc95-2800-320-421a-1300-347a-db38-4173-4e02.ngrok-free.app','172.20.10.2','host.docker.internal']
+ALLOWED_HOSTS = [
+    h.strip() for h in os.environ.get(
+        'ALLOWED_HOSTS',
+        '192.168.0.40,localhost,127.0.0.1,housematch.onrender.com,.ngrok-free.app,172.20.10.2,host.docker.internal,testserver'
+    ).split(',') if h.strip()
+]
 
 CSRF_TRUSTED_ORIGINS = [
     'https://dc95-2800-320-421a-1300-347a-db38-4173-4e02.ngrok-free.app',
@@ -146,17 +152,26 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/mapa/'
 
 #env
-import os
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', 'tu-api-key-aqui')
 GROQ_API_KEY = os.environ.get('GROQ_API_KEY', '')
 
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": os.environ.get("REDIS_URL", "redis://127.0.0.1:6379/1"),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        },
-        "TIMEOUT": 60,
+REDIS_URL = os.environ.get("REDIS_URL")
+if REDIS_URL:
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": REDIS_URL,
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            },
+            "TIMEOUT": 60,
+        }
     }
-}
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "housematch-local-cache",
+            "TIMEOUT": 60,
+        }
+    }
