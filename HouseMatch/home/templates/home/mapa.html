@@ -141,6 +141,8 @@
         </a>
 
         <div class="flex items-center gap-4">
+            <a href="/tools/acm/" class="px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 hover:border-[#136dec] hover:text-[#136dec] transition-all">ACM</a>
+            <button class="px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 hover:border-[#136dec] hover:text-[#136dec] transition-all">Datos</button>
             {% if user.is_authenticated %}
             <a id="nav-heart-link"
                href="{% url 'home:etiquetas' %}"
