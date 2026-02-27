@@ -324,8 +324,8 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Notas adicionales <span class="font-normal text-slate-400">— opcional</span></label>
-                    <textarea name="notas" rows="2" placeholder="Ej: Propiedad en esquina, vista al parque..." class="w-full text-sm rounded-lg border border-slate-200 bg-white px-3 py-2 focus:ring-2 focus:ring-blue-200 focus:border-[#136dec] outline-none resize-none"></textarea>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Notas adicionales <span class="font-normal text-slate-400"><br>— Puedo lecturar los valores comerciales independientemente de la tipología del inmueble, lo que me ayudaría a pensar mejor es que seas lo más específico posible en la descripción de tu inmueble.</span></label>
+                    <textarea name="notas" rows="2" placeholder="Ej: Propiedad en esquina, vista al parque" class="w-full text-sm rounded-lg border border-slate-200 bg-white px-3 py-2 focus:ring-2 focus:ring-blue-200 focus:border-[#136dec] outline-none resize-none"></textarea>
                 </div>
 
             </form>
@@ -373,10 +373,16 @@
                         <p class="text-xs text-slate-400">Generado por IA · HouseMatch</p>
                     </div>
                 </div>
-                <button onclick="resetACM()" class="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:border-[#136dec] hover:text-[#136dec] transition-all">
-                    <span class="material-icons text-sm">refresh</span>
-                    Nueva consulta
-                </button>
+                <div class="flex items-center gap-2">
+                    <button id="btn-pdf" onclick="downloadPDF()" class="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#136dec] text-sm font-semibold text-white hover:bg-[#0f5bc7] transition-all shadow-sm">
+                        <span class="material-icons text-sm">download</span>
+                        Descargar PDF
+                    </button>
+                    <button onclick="resetACM()" class="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:border-[#136dec] hover:text-[#136dec] transition-all">
+                        <span class="material-icons text-sm">refresh</span>
+                        Nueva consulta
+                    </button>
+                </div>
             </div>
 
             <div id="report-content" class="glass-panel rounded-2xl p-8 shadow-sm leading-relaxed text-sm"></div>
@@ -393,6 +399,9 @@
 // ── State ──
 const selectedComparables = [];  // array of GeoJSON feature objects
 const markerRegistry = new Map(); // id → {feature, marker, element}
+let lastReporte = null;
+let lastSujeto = null;
+let lastComparables = null;
 
 // ── Map init ──
 const mapInst = L.map('map', {
@@ -638,6 +647,9 @@ async function generateACM() {
         document.getElementById('report-spinner').classList.add('hidden');
 
         if (data.ok) {
+            lastReporte = data.reporte;
+            lastSujeto = sujeto;
+            lastComparables = body.comparables;
             document.getElementById('report-content').innerHTML = marked.parse(data.reporte);
             document.getElementById('report-result').classList.remove('hidden');
         } else {
@@ -653,10 +665,57 @@ async function generateACM() {
     }
 }
 
+// ── Download PDF ──
+async function downloadPDF() {
+    if (!lastReporte) return;
+    const btn = document.getElementById('btn-pdf');
+    const originalHTML = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-icons text-sm animate-spin">refresh</span> Generando...';
+
+    try {
+        const resp = await fetch('/tools/acm/api/pdf/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: JSON.stringify({
+                comparables: lastComparables,
+                sujeto: lastSujeto,
+                reporte: lastReporte,
+            }),
+        });
+
+        if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            alert('Error generando PDF: ' + (err.error || resp.statusText));
+            return;
+        }
+
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'ACM.pdf';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 1000);
+    } catch (err) {
+        alert('Error de conexión: ' + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+    }
+}
+
 // ── Reset ──
 function resetACM() {
     document.getElementById('report-section').classList.add('hidden');
     document.getElementById('report-content').innerHTML = '';
+    lastReporte = null;
+    lastSujeto = null;
+    lastComparables = null;
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 </script>

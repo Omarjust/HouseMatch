@@ -1,8 +1,10 @@
 import json
+import datetime
 from django.conf import settings
 from django.shortcuts import redirect, render
+from django.template.loader import render_to_string
 from django.urls import reverse
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_POST
 from groq import Groq
 
@@ -61,6 +63,60 @@ def acm_generar(request):
         return JsonResponse({'ok': False, 'error': str(e)}, status=500)
 
 
+@require_POST
+def acm_pdf(request):
+    guard = _require_plan(request)
+    if guard:
+        return JsonResponse({'ok': False, 'error': 'No autorizado'}, status=403)
+
+    try:
+        body = json.loads(request.body)
+        comparables = body.get('comparables', [])
+        sujeto = body.get('sujeto', {})
+        reporte = body.get('reporte', '')
+
+        user = request.user
+        user_nombre = f'{user.first_name} {user.last_name}'.strip() or user.email
+        user_email = user.email
+        empresa_nombre = ''
+        try:
+            empresa_nombre = user.perfil.empresa.nombre
+        except Exception:
+            pass
+
+        fecha = datetime.date.today().strftime('%d/%m/%Y')
+
+        html = render_to_string('tools/acm_pdf_template.html', {
+            'comparables': comparables,
+            'sujeto': sujeto,
+            'reporte_json': json.dumps(reporte),
+            'user_nombre': user_nombre,
+            'user_email': user_email,
+            'empresa_nombre': empresa_nombre,
+            'fecha': fecha,
+        })
+
+        from playwright.sync_api import sync_playwright
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            page = browser.new_page()
+            page.set_content(html, wait_until='networkidle')
+            pdf_bytes = page.pdf(
+                format='A4',
+                print_background=True,
+                margin={'top': '15mm', 'bottom': '15mm', 'left': '15mm', 'right': '15mm'},
+            )
+            browser.close()
+
+        filename = f"ACM_{datetime.date.today().strftime('%Y-%m-%d')}.pdf"
+        response = HttpResponse(pdf_bytes, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+
+    except Exception as e:
+        return JsonResponse({'ok': False, 'error': str(e)}, status=500)
+
+
 def _build_prompt(comparables, sujeto):
     def fmt_comp(c, idx):
         return f"""Comparable {idx}:
@@ -100,21 +156,21 @@ Síntesis de los hallazgos clave.
 Tabla comparando el inmueble sujeto vs. cada comparable (características + precio/m²).
 
 ## 3. Análisis de Precio por m²
-Calcula el precio USD/m² de cada comparable y su promedio ponderado.
+Calcula el precio USD/m² de cada comparable dada sus caracteristicas independientes, encuentra diferencias entre casas, departamento, etc.
 
 ## 4. Ajustes por Diferencias
 Identifica diferencias relevantes (zona, estado, amenidades, tamaño) y su impacto estimado en el valor.
 
 ## 5. Rango de Valor Estimado
-Rango mínimo-máximo justificado para el inmueble sujeto (en USD).
+Rango mínimo-máximo justificado para el inmueble sujeto (en USD y BS) que la diferencia entre el precio minimo y maximo no exceda el 5%.
 
 ## 6. Precio de Lista Recomendado
-Un precio específico de publicación con justificación.
+Un precio específico de publicación con justificación, sin ser mayor al precio maximo.
 
 ## 7. Contexto de Mercado
 Breve análisis del mercado inmobiliario local en esa zona/ciudad.
 
 ## 8. Conclusión y Recomendación
-Estrategia recomendada para el asesor (precio, tiempo estimado de venta, puntos a negociar).
+Estrategia recomendada para el asesor (precio, puntos a negociar).
 
 Sé preciso, profesional y fundamenta cada estimación con datos de los comparables."""

@@ -7,4 +7,5 @@ urlpatterns = [
     path('', views.dashboard, name='dashboard'),
     path('acm/', views.acm, name='acm'),
     path('acm/api/generar/', views.acm_generar, name='acm_generar'),
+    path('acm/api/pdf/', views.acm_pdf, name='acm_pdf'),
 ]
